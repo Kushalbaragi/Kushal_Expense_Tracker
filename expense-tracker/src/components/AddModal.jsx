@@ -135,7 +135,7 @@ export default function AddModal({ open, onClose, onAdd, onEdit, editData }) {
             {/* Calendar — opens ABOVE */}
             {calOpen && (
               <div
-                className="absolute left-0 right-0 bottom-full mb-2 z-[60]"
+                className="absolute top-[-100%] left-0 right-0 bottom-full mb-2 z-[60]"
                 onClick={e => e.stopPropagation()}
               >
                 <CalendarPicker value={date} onChange={setDate} onClose={() => setCalOpen(false)} />
