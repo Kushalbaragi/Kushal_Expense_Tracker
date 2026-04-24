@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { today } from '../utils/format'
 import CalendarPicker from './CalendarPicker'
+import { toTitleCase } from '../utils/format'
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 function formatDisplay(dateStr) {
@@ -51,9 +52,9 @@ export default function AddModal({ open, onClose, onAdd, onEdit, editData }) {
     const val = parseFloat(amount)
     if (!val || val <= 0) return
     if (isEdit) {
-      onEdit(editData.id, { type, amount: val, date, description })
+      onEdit(editData.id, { type, amount: val, date, description: toTitleCase(description) })
     } else {
-      onAdd({ type, amount: val, date, description })
+      onAdd({ type, amount: val, date, description: toTitleCase(description) })
     }
     onClose()
   }

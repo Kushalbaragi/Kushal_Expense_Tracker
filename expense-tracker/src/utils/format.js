@@ -72,6 +72,10 @@ export function getMonthTotal(transactions, type, month, year) {
     .reduce((sum, tx) => sum + tx.amount, 0)
 }
 
+export function toTitleCase(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+} 
+
 export function getDelta(transactions, type, month, year) {
   const current = getMonthTotal(transactions, type, month, year)
   const prevMonth = month === 0 ? 11 : month - 1
