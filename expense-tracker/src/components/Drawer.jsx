@@ -37,7 +37,7 @@ function MenuItem({ label, value, onClick, danger }) {
       <span className={`text-sm font-normal ${danger ? 'text-red-400' : 'text-white'}`}>{label}</span>
       <div className="flex items-center gap-2">
         {value && <span className="text-xs text-white/35 truncate max-w-[140px]">{value}</span>}
-        {!danger && <ChevronRight />}
+       
       </div>
     </button>
   )
@@ -77,12 +77,12 @@ export default function Drawer({ open, onClose }) {
         }}
       >
         {/* Profile section */}
-        <div className="px-5 pt-14 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-5 pt-8 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           {user && profile ? (
             <>
               <Avatar user={profile} />
               <p className="text-white text-base font-semibold mt-4 mb-0.5">{profile.name}</p>
-              <p className="text-xs font-medium" style={{ color: '#4ade80' }}>
+              <p className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-green-900/40 text-green-400 text-xs font-medium">
                 Tracking money since {formatJoinDate(profile.joinDate)}
               </p>
             </>
@@ -123,18 +123,17 @@ export default function Drawer({ open, onClose }) {
             <>
               <MenuItem label="Name" value={profile.name} onClick={() => {}} />
               <Divider />
-              <MenuItem label="Phone" value={profile.phone || '—'} onClick={() => {}} />
-              <Divider />
               <MenuItem label="Email" value={profile.email || '—'} onClick={() => {}} />
               <Divider />
               <MenuItem label="Subscription" value="Free" onClick={() => {}} />
-              <div className="mt-4" />
+               <Divider />
             </>
           )}
 
           <MenuItem label="Privacy Policy" onClick={() => {}} />
           <Divider />
           <MenuItem label="Terms & Conditions" onClick={() => {}} />
+           <Divider />
 
           {user && (
             <>

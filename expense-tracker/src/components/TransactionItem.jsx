@@ -14,7 +14,8 @@ export default function TransactionItem({ tx, onDelete, onEdit, isIncome }) {
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`text-sm font-medium ${isIncome ? 'text-income' : 'text-expense'}`}>
+      <span className="text-sm font-medium"
+        style={{ color: isIncome ? 'rgb(74 222 128 / var(--tw-text-opacity, 0.8))' : '#a3a3a3' }} >
           {isIncome ? '+' : '-'}{formatCurrencyFull(tx.amount)}
         </span>
 
@@ -25,7 +26,7 @@ export default function TransactionItem({ tx, onDelete, onEdit, isIncome }) {
           style={{ background: 'rgba(255,255,255,0.07)' }}
           aria-label="Delete"
         >
-          <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
+          <svg width="6" height="6" viewBox="0 0 8 8" fill="none">
             <line x1="1" y1="1" x2="7" y2="7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round"/>
             <line x1="7" y1="1" x2="1" y2="7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>

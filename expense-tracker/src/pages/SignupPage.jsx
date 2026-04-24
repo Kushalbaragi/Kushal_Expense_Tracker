@@ -6,7 +6,7 @@ function SuccessScreen({ email }) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const t = setTimeout(() => navigate('/login'), 3000)
+    const t = setTimeout(() => navigate('/login'), 6000)
     return () => clearTimeout(t)
   }, [navigate])
 
@@ -93,7 +93,7 @@ export default function SignupPage() {
             <input
               type="text"
               name="name"
-              placeholder="Kushal Baragi"
+              placeholder="Full Name"
               value={form.name}
               onChange={handleChange}
               className="w-full glass rounded-xl px-4 py-3 text-white text-sm outline-none placeholder-border focus:glass-active transition-all duration-200"
