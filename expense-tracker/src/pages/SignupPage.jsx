@@ -7,23 +7,46 @@ export default function SignupPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
     setError('')
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name || !form.email || !form.password) { setError('Please fill in all required fields'); return }
-    // Mock signup — swap with Supabase call later
-    signup({
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      avatar: null,
-    })
-    navigate('/')
+    setLoading(true)
+    try {
+      await signup({ name: form.name, email: form.email, phone: form.phone, password: form.password })
+      setEmailSent(true)
+    } catch (err) {
+      setError(err.message || 'Sign up failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
+          style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.25)' }}>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M5 14l6 6L23 8" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <h2 className="text-white text-xl font-semibold mb-2">Check your email</h2>
+        <p className="text-white/40 text-sm max-w-[280px]">
+          We sent a confirmation link to <span className="text-white/70">{form.email}</span>. Click it to activate your account.
+        </p>
+        <Link to="/login" className="mt-8 text-white/50 text-sm hover:text-white transition-colors">
+          Back to Log In
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -88,9 +111,10 @@ export default function SignupPage() {
 
           <button
             type="submit"
-            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2"
+            disabled={loading}
+            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Account
+            {loading ? 'Creating account…' : 'Create Account'}
           </button>
         </form>
 

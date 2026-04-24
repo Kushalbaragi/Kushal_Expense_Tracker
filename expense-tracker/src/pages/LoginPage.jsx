@@ -7,29 +7,30 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
     setError('')
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.email || !form.password) { setError('Please fill in all fields'); return }
-    // Mock login — swap with Supabase call later
-    login({
-      email: form.email,
-      name: form.email.split('@')[0],
-      phone: '',
-      avatar: null,
-    })
-    navigate('/')
+    setLoading(true)
+    try {
+      await login({ email: form.email, password: form.password })
+      navigate('/')
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-[400px]">
-        {/* Logo / Title */}
         <div className="text-center mb-10">
           <p className="text-white/30 text-sm mt-2">Track your money, effortlessly.</p>
         </div>
@@ -65,9 +66,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2"
+            disabled={loading}
+            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Log In
+            {loading ? 'Logging in…' : 'Log In'}
           </button>
         </form>
 

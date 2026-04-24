@@ -48,11 +48,11 @@ function Divider() {
 }
 
 export default function Drawer({ open, onClose }) {
-  const { user, logout } = useAuth()
+  const { user, profile, logout } = useAuth()
   const navigate = useNavigate()
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await logout()
     onClose()
     navigate('/login')
   }
@@ -78,12 +78,12 @@ export default function Drawer({ open, onClose }) {
       >
         {/* Profile section */}
         <div className="px-5 pt-14 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          {user ? (
+          {user && profile ? (
             <>
-              <Avatar user={user} />
-              <p className="text-white text-base font-semibold mt-4 mb-0.5">{user.name}</p>
+              <Avatar user={profile} />
+              <p className="text-white text-base font-semibold mt-4 mb-0.5">{profile.name}</p>
               <p className="text-xs font-medium" style={{ color: '#4ade80' }}>
-                Tracking money since {formatJoinDate(user.joinDate)}
+                Tracking money since {formatJoinDate(profile.joinDate)}
               </p>
             </>
           ) : (
@@ -119,13 +119,13 @@ export default function Drawer({ open, onClose }) {
 
         {/* Menu items */}
         <div className="flex-1 overflow-y-auto py-2">
-          {user && (
+          {user && profile && (
             <>
-              <MenuItem label="Name" value={user.name} onClick={() => {}} />
+              <MenuItem label="Name" value={profile.name} onClick={() => {}} />
               <Divider />
-              <MenuItem label="Phone" value={user.phone || '—'} onClick={() => {}} />
+              <MenuItem label="Phone" value={profile.phone || '—'} onClick={() => {}} />
               <Divider />
-              <MenuItem label="Email" value={user.email || '—'} onClick={() => {}} />
+              <MenuItem label="Email" value={profile.email || '—'} onClick={() => {}} />
               <Divider />
               <MenuItem label="Subscription" value="Free" onClick={() => {}} />
               <div className="mt-4" />
