@@ -59,20 +59,20 @@ export default function SummaryCard({ transactions, activeTab, selectedMonth, ye
         <p className="text-4xl font-semibold tracking-tight text-white">
           <AnimatedAmount value={current} />
         </p>
-        {arrow && (
-          <span
-            className="absolute right-0 text-lg font-normal"
-            style={deltaStyle}
-          >
-            {arrow}
-          </span>
-        )}
       </div>
 
       {/* Delta amount — small, below */}
       <p className="text-xs text-center mb-5"
         style={deltaText ? deltaStyle : { color: 'rgba(255,255,255,0.2)' }}>
         {deltaText ?? '—'}
+          {arrow && (
+          <span
+            className="text-sm font-normal ml-1"
+            style={deltaStyle}
+          >
+           {arrow}
+          </span>
+        )}
       </p>
 
       <BarChart
