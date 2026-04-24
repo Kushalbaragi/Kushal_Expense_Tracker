@@ -6,7 +6,7 @@ const BAR_WIDTH = 14
 const GROUP_WIDTH = BAR_WIDTH + 8
 const MONTHS = 12
 
-export default function BarChart({ transactions, activeMonth, year, activeTab }) {
+export default function BarChart({ transactions, activeMonth, year, activeTab, onMonthClick }) {
   const { income, expense } = useMemo(
     () => getMonthlyTotals(transactions, year),
     [transactions, year]
@@ -15,39 +15,56 @@ export default function BarChart({ transactions, activeMonth, year, activeTab })
   const values = activeTab === 'income' ? income : expense
   const maxVal = Math.max(...values, 1)
   const totalWidth = GROUP_WIDTH * MONTHS
-  const svgH = BAR_HEIGHT + 24
+  const svgH = BAR_HEIGHT + 22
+
+  const currMonth = new Date().getMonth()
+  const currYear = new Date().getFullYear()
+
+  const activeColor = activeTab === 'income' ? 'rgba(74,222,128,0.85)' : 'rgba(255,255,255,0.82)'
+  const dimColor   = activeTab === 'income' ? 'rgba(74,222,128,0.22)' : 'rgba(255,255,255,0.14)'
 
   return (
-    <svg
-      viewBox={`0 0 ${totalWidth} ${svgH}`}
-      className="w-full"
-      style={{ overflow: 'visible' }}
-    >
+    <svg viewBox={`0 0 ${totalWidth} ${svgH}`} className="w-full" style={{ overflow: 'visible' }}>
       {Array.from({ length: MONTHS }, (_, i) => {
         const x = i * GROUP_WIDTH + (GROUP_WIDTH - BAR_WIDTH) / 2
         const h = (values[i] / maxVal) * BAR_HEIGHT
         const isActive = i === activeMonth
-        const fill = isActive ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.18)'
+        // future months (relative to current year) are not clickable
+        const isFuture = year >= currYear && i > currMonth
+        const hasData = h > 0
 
         return (
           <g key={i}>
-            <rect
-              x={x}
-              y={BAR_HEIGHT - h}
-              width={BAR_WIDTH}
-              height={Math.max(h, 2)}
-              rx={4}
-              fill={fill}
-              style={{ transition: 'height 0.5s cubic-bezier(0.34,1.56,0.64,1), y 0.5s cubic-bezier(0.34,1.56,0.64,1)' }}
-            />
+            {/* bar — only clickable past/current months that have data */}
+            {hasData ? (
+              <rect
+                x={x}
+                y={BAR_HEIGHT - h}
+                width={BAR_WIDTH}
+                height={h}
+                rx={4}
+                fill={isActive ? activeColor : dimColor}
+                style={{
+                  cursor: isFuture ? 'default' : 'pointer',
+                  transition: 'fill 0.25s ease, height 0.4s cubic-bezier(0.34,1.2,0.64,1), y 0.4s cubic-bezier(0.34,1.2,0.64,1)',
+                }}
+                onClick={() => !isFuture && onMonthClick?.(i)}
+              />
+            ) : (
+              /* placeholder tap area so layout stays consistent */
+              <rect x={x} y={BAR_HEIGHT - 2} width={BAR_WIDTH} height={2} rx={1} fill="transparent" />
+            )}
+
+            {/* month label — not clickable */}
             <text
               x={x + BAR_WIDTH / 2}
-              y={BAR_HEIGHT + 16}
+              y={BAR_HEIGHT + 15}
               textAnchor="middle"
               fontSize="9"
-              fill={isActive ? '#fff' : 'rgba(255,255,255,0.3)'}
+              fill={isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.22)'}
               fontFamily="Inter, sans-serif"
               fontWeight={isActive ? '600' : '400'}
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
             >
               {monthShortLabel(i)}
             </text>

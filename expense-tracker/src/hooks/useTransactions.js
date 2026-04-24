@@ -31,9 +31,19 @@ export function useTransactions() {
     setTransactions(prev => [tx, ...prev])
   }
 
+  function editTransaction(id, { type, amount, date, description }) {
+    setTransactions(prev =>
+      prev.map(tx =>
+        tx.id === id
+          ? { ...tx, type, amount: parseFloat(amount), date, description: description.trim() }
+          : tx
+      )
+    )
+  }
+
   function deleteTransaction(id) {
     setTransactions(prev => prev.filter(tx => tx.id !== id))
   }
 
-  return { transactions, addTransaction, deleteTransaction }
+  return { transactions, addTransaction, editTransaction, deleteTransaction }
 }
