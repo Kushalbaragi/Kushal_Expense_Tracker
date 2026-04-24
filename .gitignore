@@ -1,0 +1,5 @@
+node_modules/
+dist/
+expense-tracker-api/src/db/data.json
+.DS_Store
+*.local
