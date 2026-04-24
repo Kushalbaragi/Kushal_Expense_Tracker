@@ -1,17 +1,22 @@
 import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import SummaryCard from './components/SummaryCard'
 import TransactionList from './components/TransactionList'
 import AddModal from './components/AddModal'
+import Drawer from './components/Drawer'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import { useTransactions } from './hooks/useTransactions'
 import { currentMonthYear } from './utils/format'
 
-export default function App() {
+function Dashboard() {
   const { month: currMonth, year: currYear } = currentMonthYear()
   const [activeTab, setActiveTab] = useState('expense')
   const [modalOpen, setModalOpen] = useState(false)
   const [editTx, setEditTx] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
 
   function openEdit(tx) {
@@ -28,7 +33,11 @@ export default function App() {
     <div className="min-h-screen bg-bg font-sans">
       <div className="mx-auto max-w-[480px] min-h-screen relative">
 
-        <Header activeTab={activeTab} onTabChange={setActiveTab} />
+        <Header
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onMenuOpen={() => setDrawerOpen(true)}
+        />
 
         <SummaryCard
           transactions={transactions}
@@ -68,6 +77,8 @@ export default function App() {
           </svg>
         </button>
 
+        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
         <AddModal
           open={modalOpen}
           onClose={handleClose}
@@ -77,5 +88,15 @@ export default function App() {
         />
       </div>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+    </Routes>
   )
 }
