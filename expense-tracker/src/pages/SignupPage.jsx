@@ -2,49 +2,76 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+function Spinner() {
+  return (
+    <svg
+      width="16" height="16" viewBox="0 0 16 16" fill="none"
+      style={{ animation: 'spin 0.75s linear infinite', display: 'inline-block' }}
+    >
+      <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" strokeWidth="2"/>
+      <path d="M8 2a6 6 0 0 1 6 6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 function SuccessScreen({ email }) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const t = setTimeout(() => navigate('/login'), 6000)
+    const t = setTimeout(() => navigate('/login'), 5000)
     return () => clearTimeout(t)
   }, [navigate])
 
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6 text-center">
+      {/* Animated green circle + tick */}
       <div
         className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
         style={{
           background: 'rgba(74,222,128,0.12)',
           border: '1px solid rgba(74,222,128,0.3)',
-          animation: 'scaleIn 0.4s cubic-bezier(0.34,1.2,0.64,1) both',
+          animation: 'scaleIn 0.45s cubic-bezier(0.34,1.2,0.64,1) both',
         }}
       >
         <svg
           width="36" height="36" viewBox="0 0 36 36" fill="none"
-          style={{ animation: 'fadeSlideUp 0.35s 0.2s cubic-bezier(0.16,1,0.3,1) both' }}
+          style={{ animation: 'fadeSlideUp 0.35s 0.25s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
         >
           <path d="M6 18l8 8L30 10" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
+
       <h2
         className="text-white text-xl font-semibold mb-2"
-        style={{ animation: 'fadeSlideUp 0.35s 0.3s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
+        style={{ animation: 'fadeSlideUp 0.35s 0.35s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
       >
         Account created!
       </h2>
       <p
-        className="text-white/40 text-sm max-w-[260px]"
-        style={{ animation: 'fadeSlideUp 0.35s 0.4s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
+        className="text-white/40 text-sm max-w-[260px] mb-8"
+        style={{ animation: 'fadeSlideUp 0.35s 0.45s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
       >
-        Check <span className="text-white/60">{email}</span> to confirm, then log in.
+        You're all set. Redirecting to login…
       </p>
-      <p
-        className="text-white/20 text-xs mt-6"
-        style={{ animation: 'fadeSlideUp 0.35s 0.5s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
+
+      {/* Progress bar */}
+      <div
+        className="w-40 h-[2px] rounded-full overflow-hidden"
+        style={{
+          background: 'rgba(255,255,255,0.08)',
+          animation: 'fadeSlideUp 0.35s 0.5s cubic-bezier(0.16,1,0.3,1) both',
+          opacity: 0,
+        }}
       >
-        Redirecting to login…
-      </p>
+        <div
+          style={{
+            height: '100%',
+            background: '#4ade80',
+            animation: 'progressFill 5s linear 0.55s both',
+            width: '0%',
+          }}
+        />
+      </div>
     </div>
   )
 }
@@ -70,7 +97,12 @@ export default function SignupPage() {
       await signup({ name: form.name, email: form.email, password: form.password })
       setDone(true)
     } catch (err) {
-      setError(err.message || 'Sign up failed. Please try again.')
+      const msg = err.message || ''
+      if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
+        setError('An account with this email already exists. Please log in.')
+      } else {
+        setError(msg || 'Sign up failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -129,9 +161,16 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? 'Creating account…' : 'Create Account'}
+            {loading ? (
+              <>
+                <Spinner />
+                <span>Creating account…</span>
+              </>
+            ) : (
+              'Create Account'
+            )}
           </button>
         </form>
 
