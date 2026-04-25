@@ -71,6 +71,7 @@ function Dashboard() {
           <TransactionList
             transactions={transactions}
             activeTab={activeTab}
+            chartTab={chartTab}
             selectedMonth={selectedMonth}
             year={currYear}
             timeRange={timeRange}
