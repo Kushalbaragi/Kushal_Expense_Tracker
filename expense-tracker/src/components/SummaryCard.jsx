@@ -30,6 +30,22 @@ function AnimatedAmount({ value }) {
   )
 }
 
+function AnimatedDelta({ text }) {
+  return (
+    <span key={text} aria-label={text}>
+      {[...text].map((char, i) => (
+        <span
+          key={i}
+          className={/\s/.test(char) ? 'inline-block w-[0.25ch]' : 'digit-up inline-block'}
+          style={{ animationDelay: `${i * 25}ms` }}
+        >
+          {char}
+        </span>
+      ))}
+    </span>
+  )
+}
+
 export default function SummaryCard({ transactions, activeTab, selectedMonth, year, onMonthChange }) {
   const current = useMemo(
     () => getMonthTotal(transactions, activeTab, selectedMonth, year),
@@ -61,19 +77,17 @@ export default function SummaryCard({ transactions, activeTab, selectedMonth, ye
         </p>
       </div>
 
-      {/* Delta amount — small, below */}
-      <p className="text-xs text-center mb-5"
+      {/* Delta amount — small, below, inline with arrow */}
+      <div className="flex items-center justify-center gap-[3px] mb-5 text-xs"
         style={deltaText ? deltaStyle : { color: 'rgba(255,255,255,0.2)' }}>
-        {deltaText ?? '—'}
-          {arrow && (
-          <span
-            className="text-sm font-normal ml-1"
-            style={deltaStyle}
-          >
-           {arrow}
-          </span>
+        {deltaText
+          ? <AnimatedDelta text={deltaText} />
+          : <span>—</span>
+        }
+        {arrow && (
+          <span className="text-xs font-medium leading-none" style={deltaStyle}>{arrow}</span>
         )}
-      </p>
+      </div>
 
       <BarChart
         transactions={transactions}

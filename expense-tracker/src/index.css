@@ -55,6 +55,11 @@ input[type='number'] { -moz-appearance: textfield; }
   to   { width: 100%; }
 }
 
+@keyframes barGrow {
+  from { transform: scaleY(0); opacity: 0; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+
 .placeholder-border::placeholder { color: #333; }
 
 /* Liquid glass */

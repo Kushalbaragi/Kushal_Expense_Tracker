@@ -23,8 +23,11 @@ export default function BarChart({ transactions, activeMonth, year, activeTab, o
   const activeColor = activeTab === 'income' ? 'rgba(74,222,128,0.85)' : 'rgba(255,255,255,0.82)'
   const dimColor   = activeTab === 'income' ? 'rgba(74,222,128,0.22)' : 'rgba(255,255,255,0.14)'
 
+  // key changes on activeTab/year → remounts SVG → re-triggers bar animations
+  const animKey = `${activeTab}-${year}`
+
   return (
-    <svg viewBox={`0 0 ${totalWidth} ${svgH}`} className="w-full" style={{ overflow: 'visible' }}>
+    <svg key={animKey} viewBox={`0 0 ${totalWidth} ${svgH}`} className="w-full" style={{ overflow: 'visible' }}>
       {Array.from({ length: MONTHS }, (_, i) => {
         const x = i * GROUP_WIDTH + (GROUP_WIDTH - BAR_WIDTH) / 2
         const h = (values[i] / maxVal) * BAR_HEIGHT
@@ -46,7 +49,10 @@ export default function BarChart({ transactions, activeMonth, year, activeTab, o
                 fill={isActive ? activeColor : dimColor}
                 style={{
                   cursor: isFuture ? 'default' : 'pointer',
-                  transition: 'fill 0.25s ease, height 0.4s cubic-bezier(0.34,1.2,0.64,1), y 0.4s cubic-bezier(0.34,1.2,0.64,1)',
+                  transformBox: 'fill-box',
+                  transformOrigin: '50% 100%',
+                  animation: `barGrow 0.35s cubic-bezier(0.34,1.2,0.64,1) ${i * 45}ms both`,
+                  transition: 'fill 0.25s ease',
                 }}
                 onClick={() => !isFuture && onMonthClick?.(i)}
               />

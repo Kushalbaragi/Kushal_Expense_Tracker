@@ -2,6 +2,18 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+function Spinner() {
+  return (
+    <svg
+      width="16" height="16" viewBox="0 0 16 16" fill="none"
+      style={{ animation: 'spin 0.75s linear infinite', display: 'inline-block' }}
+    >
+      <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" strokeWidth="2"/>
+      <path d="M8 2a6 6 0 0 1 6 6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -51,7 +63,15 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-white/35 text-xs font-medium mb-2 uppercase tracking-wider">Password</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-white/35 text-xs font-medium uppercase tracking-wider">Password</label>
+              <Link
+                to="/forgot-password"
+                className="text-white/35 text-xs hover:text-white/60 transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <input
               type="password"
               name="password"
@@ -67,9 +87,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? 'Logging in…' : 'Log In'}
+            {loading ? (
+              <>
+                <Spinner />
+                <span>Logging in…</span>
+              </>
+            ) : (
+              'Log In'
+            )}
           </button>
         </form>
 

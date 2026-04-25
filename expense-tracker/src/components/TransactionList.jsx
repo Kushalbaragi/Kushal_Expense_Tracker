@@ -26,6 +26,7 @@ export default function TransactionList({ transactions, activeTab, selectedMonth
 
   return (
     <div className="px-4 pb-28">
+      <p className="text-white/25 text-xs font-medium uppercase tracking-widest mb-3 px-1">Transactions</p>
       <div className="bg-surface rounded-xl overflow-hidden px-3">
         {filtered.map((tx, idx) => (
           <div
