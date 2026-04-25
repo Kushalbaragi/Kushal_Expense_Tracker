@@ -307,6 +307,14 @@ export default function AccountPage() {
           </div>
         </div>
 
+        {/* Logout */}
+        <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-white/5 transition-colors" onClick={async () => { await logout(); navigate('/login', { replace: true }) }}>
+            <p className="text-white text-sm">Log Out</p>
+            <ChevronRight />
+          </div>
+        </div>
+
         {/* Danger zone */}
         <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setShowEraseConfirm(true)}>
