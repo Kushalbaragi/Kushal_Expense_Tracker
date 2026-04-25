@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -170,8 +170,12 @@ export default function AccountPage() {
   const [nameInput, setNameInput] = useState(profile?.name || '')
   const [savingName, setSavingName] = useState(false)
 
-  const [pwVisible, setPwVisible] = useState(false)
   const [showPwModal, setShowPwModal] = useState(false)
+
+  // Sync avatar from profile when auth state updates (e.g. after re-login or page revisit)
+  useEffect(() => {
+    if (profile?.avatar) setAvatarUrl(profile.avatar)
+  }, [profile?.avatar])
 
   const [showEraseConfirm, setShowEraseConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -186,8 +190,9 @@ export default function AccountPage() {
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
     if (!error) {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-      await supabase.auth.updateUser({ data: { avatar_url: publicUrl } })
-      setAvatarUrl(publicUrl)
+      const urlWithBust = `${publicUrl}?t=${Date.now()}`
+      await supabase.auth.updateUser({ data: { avatar_url: urlWithBust } })
+      setAvatarUrl(urlWithBust)
     }
     setUploading(false)
     e.target.value = ''
@@ -231,14 +236,14 @@ export default function AccountPage() {
         </div>
 
         {/* Avatar */}
-        <div className="flex justify-center py-6">
+        <div className="flex flex-col items-center py-6 gap-2">
           <button
             onClick={() => fileRef.current?.click()}
             className="relative group"
             disabled={uploading}
           >
             {avatarUrl ? (
-              <img src={avatarUrl} alt="avatar" className="w-20 h-20 rounded-full object-cover" style={{ border: '1px solid rgba(255,255,255,0.13)' }} />
+              <img src={avatarUrl} alt="avatar" className="w-20 h-20 rounded-full object-cover block" style={{ border: '1px solid rgba(255,255,255,0.13)' }} />
             ) : (
               <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-semibold" style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.13)' }}>
                 {uploading ? '…' : initials}
@@ -251,6 +256,7 @@ export default function AccountPage() {
               </svg>
             </div>
           </button>
+          {uploading && <p className="text-white/30 text-xs">Uploading…</p>}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
         </div>
 
@@ -293,15 +299,10 @@ export default function AccountPage() {
           <div className="px-4 py-4">
             <p className="text-white/35 text-[11px] font-medium uppercase tracking-wider mb-1">Password</p>
             <div className="flex items-center justify-between">
-              <p className="text-white text-sm tracking-widest">{pwVisible ? 'Hidden for security' : '••••••••'}</p>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPwVisible(v => !v)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/8 transition-colors">
-                  <EyeIcon open={pwVisible} />
-                </button>
-                <button onClick={() => setShowPwModal(true)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/8 transition-colors">
-                  <EditIcon />
-                </button>
-              </div>
+              <p className="text-white text-sm tracking-widest">••••••••</p>
+              <button onClick={() => setShowPwModal(true)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/8 transition-colors">
+                <EditIcon />
+              </button>
             </div>
           </div>
         </div>

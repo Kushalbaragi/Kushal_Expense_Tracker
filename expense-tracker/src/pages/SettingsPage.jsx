@@ -64,7 +64,17 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const { transactions } = useTransactions()
 
-  const [modal, setModal] = useState(null) // 'privacy' | 'terms' | 'developer'
+  const [modal, setModal] = useState(null) // 'privacy' | 'terms' | 'developer' | 'contact' | 'feedback'
+  const [feedbackText, setFeedbackText] = useState('')
+  const [feedbackSent, setFeedbackSent] = useState(false)
+
+  function sendFeedback() {
+    if (!feedbackText.trim()) return
+    const mailto = `mailto:kushalbaragi@gmail.com?subject=Expense Tracker Feedback&body=${encodeURIComponent(feedbackText.trim())}`
+    window.open(mailto, '_blank')
+    setFeedbackSent(true)
+    setTimeout(() => { setFeedbackSent(false); setFeedbackText(''); setModal(null) }, 1500)
+  }
 
   function exportData() {
     if (!transactions.length) return
@@ -112,6 +122,14 @@ export default function SettingsPage() {
             } />
           </div>
 
+          {/* Support */}
+          <p className="text-white/30 text-[11px] font-medium uppercase tracking-widest px-1 pt-2">Support</p>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <Row label="Contact" onClick={() => setModal('contact')} />
+            <Divider />
+            <Row label="Send Feedback" onClick={() => setModal('feedback')} />
+          </div>
+
           {/* About */}
           <p className="text-white/30 text-[11px] font-medium uppercase tracking-widest px-1 pt-2">About</p>
           <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -144,6 +162,61 @@ export default function SettingsPage() {
         <p><strong className="text-white/70">Contact:</strong> For any queries, reach out to the developer directly.</p>
         <p className="text-white/25 text-xs">Last updated: April 2026</p>
       </InfoModal>
+
+      {/* Contact modal */}
+      <InfoModal open={modal === 'contact'} title="Contact" onClose={() => setModal(null)}>
+        <p>Have a question or need help? Reach out directly.</p>
+        <div className="space-y-2 mt-2">
+          <a
+            href="mailto:kushalbaragi@gmail.com"
+            className="flex items-center gap-3 py-3 px-4 rounded-xl hover:bg-white/5 transition-colors"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="1" y="3" width="14" height="10" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2"/>
+              <path d="M1 5l7 5 7-5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            <span className="text-white/60 text-sm">kushalbaragi@gmail.com</span>
+          </a>
+        </div>
+        <p className="text-white/20 text-xs mt-3">We typically respond within 1–2 business days.</p>
+      </InfoModal>
+
+      {/* Feedback modal */}
+      <div
+        className={`fixed inset-0 z-50 flex items-end justify-center transition-opacity duration-200 ${modal === 'feedback' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        style={{ background: 'rgba(0,0,0,0.55)' }}
+        onClick={() => setModal(null)}
+      >
+        <div
+          className={`w-full max-w-[480px] rounded-t-3xl px-6 pt-5 pb-10 transition-all duration-300 ${modal === 'feedback' ? 'translate-y-0' : 'translate-y-full'}`}
+          style={{ background: 'rgba(14,14,14,0.97)', borderTop: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="w-8 h-1 rounded-full mx-auto mb-5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+          <p className="text-white font-semibold text-base mb-4">{feedbackSent ? '✓ Feedback sent!' : 'Send Feedback'}</p>
+          {!feedbackSent && (
+            <>
+              <p className="text-white/40 text-sm mb-4 leading-relaxed">Tell us what you love, what's broken, or what you'd like to see next.</p>
+              <textarea
+                value={feedbackText}
+                onChange={e => setFeedbackText(e.target.value)}
+                placeholder="Your feedback…"
+                rows={4}
+                className="w-full glass rounded-xl px-4 py-3 text-white text-sm outline-none resize-none placeholder-border focus:glass-active transition-all mb-4"
+                style={{ color: 'rgba(255,255,255,0.85)' }}
+              />
+              <button
+                onClick={sendFeedback}
+                disabled={!feedbackText.trim()}
+                className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white active:scale-95 transition-all disabled:opacity-30"
+              >
+                Send
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Developer modal */}
       <InfoModal open={modal === 'developer'} title="Developer" onClose={() => setModal(null)}>
