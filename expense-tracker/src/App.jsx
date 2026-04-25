@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import Header from './components/Header'
 import SummaryCard from './components/SummaryCard'
 import TransactionList from './components/TransactionList'
@@ -8,16 +8,24 @@ import Drawer from './components/Drawer'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import { useTransactions } from './hooks/useTransactions'
+import { useAuth } from './context/AuthContext'
 import { currentMonthYear } from './utils/format'
 
 function Dashboard() {
   const { month: currMonth, year: currYear } = currentMonthYear()
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('expense')
   const [modalOpen, setModalOpen] = useState(false)
   const [editTx, setEditTx] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
+
+  function handleAddClick() {
+    if (!user) { navigate('/login'); return }
+    setModalOpen(true)
+  }
 
   function openEdit(tx) {
     setEditTx(tx)
@@ -60,7 +68,7 @@ function Dashboard() {
 
         {/* Floating + button */}
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={handleAddClick}
           className="fixed bottom-8 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center z-30 active:scale-90 transition-transform duration-150"
           style={{
             background: 'rgba(255,255,255,0.10)',
