@@ -43,11 +43,7 @@ function Dashboard() {
     <div className="min-h-screen bg-bg font-sans">
       <div className="mx-auto max-w-[480px] min-h-screen relative">
 
-        <Header
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onMenuOpen={() => setDrawerOpen(true)}
-        />
+        <Header onMenuOpen={() => setDrawerOpen(true)} />
 
         <SummaryCard
           transactions={transactions}
@@ -55,6 +51,7 @@ function Dashboard() {
           selectedMonth={selectedMonth}
           year={currYear}
           onMonthChange={setSelectedMonth}
+          onTabChange={setActiveTab}
         />
 
         <div className="mt-2">

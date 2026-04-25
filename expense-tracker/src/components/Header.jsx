@@ -8,10 +8,9 @@ function HamburgerIcon() {
   )
 }
 
-export default function Header({ activeTab, onTabChange, onMenuOpen }) {
+export default function Header({ onMenuOpen }) {
   return (
-    <div className="flex items-center justify-between pt-6 pb-4 px-5">
-      {/* Hamburger */}
+    <div className="flex items-center pt-6 pb-2 px-5">
       <button
         onClick={onMenuOpen}
         className="w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 hover:bg-white/8 active:scale-90"
@@ -19,32 +18,6 @@ export default function Header({ activeTab, onTabChange, onMenuOpen }) {
       >
         <HamburgerIcon />
       </button>
-
-      {/* Tab toggle — sliding pill */}
-      <div className="relative flex glass rounded-full p-[3px]">
-        {/* sliding pill */}
-        <div
-          className="absolute top-[3px] bottom-[3px] w-[calc(50%-3px)] rounded-full glass-active"
-          style={{
-            left: activeTab === 'expense' ? '3px' : 'calc(50%)',
-            transition: 'left 0.22s cubic-bezier(0.4,0,0.2,1)',
-          }}
-        />
-        {['expense', 'income'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => onTabChange(tab)}
-            className={`relative z-10 flex-1 px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
-              activeTab === tab ? 'text-white' : 'text-white/40 hover:text-white/70'
-            }`}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {/* Spacer to balance the hamburger */}
-      <div className="w-9" />
     </div>
   )
 }

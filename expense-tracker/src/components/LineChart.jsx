@@ -144,13 +144,6 @@ export default function LineChart({ incomeData, expenseData, labels, animKey }) 
         )
       )}
 
-      {/* Legend — top right */}
-      <g>
-        <circle cx={CHART_W - 58} cy={5} r="2.5" fill="rgba(74,222,128,0.8)"  />
-        <text x={CHART_W - 52} y={9} fontSize="8" fill="rgba(255,255,255,0.32)" fontFamily="Inter, sans-serif">Income</text>
-        <circle cx={CHART_W - 14} cy={5} r="2.5" fill="rgba(248,113,113,0.75)" />
-        <text x={CHART_W - 8}  y={9} fontSize="8" fill="rgba(255,255,255,0.32)" fontFamily="Inter, sans-serif">Exp</text>
-      </g>
     </svg>
   )
 }

@@ -53,18 +53,24 @@ function AnimatedDelta({ text }) {
   )
 }
 
-// Small 3-segment pill toggle
+// Small 3-segment pill toggle — fixed pixel widths so pill is always centred
+const BTN_W = 78  // px per button, wide enough for "Overview"
+const PAD   = 3
+
 function ChartTabToggle({ value, onChange }) {
   const tabs = ['expense', 'income', 'overview']
   const idx  = tabs.indexOf(value)
   return (
-    <div className="relative flex glass rounded-full p-[3px] mx-auto w-fit mb-4">
+    <div
+      className="relative flex glass rounded-full mx-auto mb-4"
+      style={{ width: `${BTN_W * 3 + PAD * 2}px`, padding: `${PAD}px` }}
+    >
       {/* sliding pill */}
       <div
         className="absolute top-[3px] bottom-[3px] rounded-full glass-active"
         style={{
-          width:      'calc(33.333% - 2px)',
-          left:       `calc(${idx * 33.333}% + 3px)`,
+          width:      `${BTN_W}px`,
+          left:       `${PAD + idx * BTN_W}px`,
           transition: 'left 0.22s cubic-bezier(0.4,0,0.2,1)',
         }}
       />
@@ -72,9 +78,10 @@ function ChartTabToggle({ value, onChange }) {
         <button
           key={tab}
           onClick={() => onChange(tab)}
-          className={`relative z-10 px-4 py-[5px] rounded-full text-[11px] font-medium transition-colors duration-200 ${
+          className={`relative z-10 py-[5px] rounded-full text-[11px] font-medium transition-colors duration-200 text-center ${
             value === tab ? 'text-white' : 'text-white/35 hover:text-white/60'
           }`}
+          style={{ width: `${BTN_W}px` }}
         >
           {tab.charAt(0).toUpperCase() + tab.slice(1)}
         </button>
@@ -109,7 +116,7 @@ function RangeSelector({ value, onChange, currentYear }) {
   )
 }
 
-export default function SummaryCard({ transactions, activeTab, selectedMonth, year, onMonthChange }) {
+export default function SummaryCard({ transactions, activeTab, selectedMonth, year, onMonthChange, onTabChange }) {
   const { year: currYear } = currentMonthYear()
 
   // Internal chart tab — syncs with parent activeTab for expense/income
@@ -119,6 +126,12 @@ export default function SummaryCard({ transactions, activeTab, selectedMonth, ye
   useEffect(() => {
     if (chartTab !== 'overview') setChartTab(activeTab)
   }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When user picks expense/income in the chart toggle, also update the transaction list
+  function handleChartTabChange(tab) {
+    setChartTab(tab)
+    if (tab !== 'overview') onTabChange?.(tab)
+  }
 
   // ── Compute chart data ────────────────────────────────────────────────────
   const chartData = useMemo(() => {
@@ -178,6 +191,17 @@ export default function SummaryCard({ transactions, activeTab, selectedMonth, ye
     return `${currYear - 4} – ${currYear}`
   }, [timeRange, selectedMonth, year, currYear])
 
+  // For line chart in 'year' range: trim data to current month only
+  const lineChartData = useMemo(() => {
+    if (timeRange !== 'year' || year < currYear) return chartData
+    const end = new Date().getMonth() + 1  // include current month, exclude future
+    return {
+      income:  chartData.income.slice(0, end),
+      expense: chartData.expense.slice(0, end),
+      labels:  chartData.labels.slice(0, end),
+    }
+  }, [chartData, timeRange, year, currYear])
+
   // animKey: changing this re-triggers chart entrance animations
   const animKey = `${chartTab}-${timeRange}-${year}`
 
@@ -185,7 +209,7 @@ export default function SummaryCard({ transactions, activeTab, selectedMonth, ye
     <div className="mx-4 mb-2 p-5 overflow-hidden">
 
       {/* 3-way chart tab toggle */}
-      <ChartTabToggle value={chartTab} onChange={setChartTab} />
+      <ChartTabToggle value={chartTab} onChange={handleChartTabChange} />
 
       {/* Period label */}
       <p className="text-white/40 text-sm text-center mb-1">{periodLabel}</p>
@@ -227,9 +251,9 @@ export default function SummaryCard({ transactions, activeTab, selectedMonth, ye
       {isOverview ? (
         <LineChart
           key={animKey}
-          incomeData={chartData.income}
-          expenseData={chartData.expense}
-          labels={chartData.labels}
+          incomeData={lineChartData.income}
+          expenseData={lineChartData.expense}
+          labels={lineChartData.labels}
           animKey={animKey}
         />
       ) : (
