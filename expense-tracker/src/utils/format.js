@@ -1,5 +1,6 @@
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const MONTHS_SHORT = ['J','F','M','A','M','J','J','A','S','O','N','D']
+const MONTHS_ABBR  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export function formatCurrency(amount) {
   return new Intl.NumberFormat('en-IN', {
@@ -75,6 +76,44 @@ export function getMonthTotal(transactions, type, month, year) {
 export function toTitleCase(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 } 
+
+// Rolling last 12 months (oldest → newest)
+export function getRolling12Months(transactions) {
+  const now = new Date()
+  const slots = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
+    return { month: d.getMonth(), year: d.getFullYear() }
+  })
+  const income  = new Array(12).fill(0)
+  const expense = new Array(12).fill(0)
+  const labels  = slots.map(s => {
+    const abbr = MONTHS_ABBR[s.month]
+    return s.year !== now.getFullYear() ? `${abbr}'${String(s.year).slice(2)}` : abbr
+  })
+  transactions.forEach(tx => {
+    const d = new Date(tx.date)
+    const idx = slots.findIndex(s => s.month === d.getMonth() && s.year === d.getFullYear())
+    if (idx === -1) return
+    if (tx.type === 'income') income[idx] += tx.amount
+    else expense[idx] += tx.amount
+  })
+  return { income, expense, labels }
+}
+
+// Yearly totals for last `count` years
+export function getYearlyTotals(transactions, currentYear, count = 5) {
+  const years   = Array.from({ length: count }, (_, i) => currentYear - count + 1 + i)
+  const income  = new Array(count).fill(0)
+  const expense = new Array(count).fill(0)
+  const labels  = years.map(String)
+  transactions.forEach(tx => {
+    const idx = years.indexOf(new Date(tx.date).getFullYear())
+    if (idx === -1) return
+    if (tx.type === 'income') income[idx] += tx.amount
+    else expense[idx] += tx.amount
+  })
+  return { income, expense, labels }
+}
 
 export function getDelta(transactions, type, month, year) {
   const current = getMonthTotal(transactions, type, month, year)
