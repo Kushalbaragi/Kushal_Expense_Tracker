@@ -216,7 +216,7 @@ export default function AccountPage() {
   async function handleDeleteAccount() {
     setWorking(true)
     await supabase.from('transactions').delete().eq('user_id', user.id)
-    try { await supabase.rpc('delete_user') } catch (_) {}
+    await supabase.rpc('delete_user')
     await logout()
     navigate('/login', { replace: true })
   }
