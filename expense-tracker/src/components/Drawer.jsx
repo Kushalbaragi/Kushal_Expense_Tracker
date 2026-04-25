@@ -1,147 +1,55 @@
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-function formatJoinDate(iso) {
-  const d = new Date(iso)
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
-}
-
-function Avatar({ user }) {
-  if (user?.avatar) {
-    return <img src={user.avatar} alt={user.name} className="w-16 h-16 rounded-full object-cover" />
-  }
-  const initials = (user?.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-  return (
-    <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-semibold"
-      style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.15)' }}>
-      {initials}
-    </div>
-  )
-}
-
-function ChevronRight() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M5 3l4 4-4 4" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
-}
-
-function MenuItem({ label, value, onClick, danger }) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center justify-between py-[14px] px-4 transition-colors duration-150 hover:bg-white/5 active:bg-white/10 text-left"
-    >
-      <span className={`text-sm font-normal ${danger ? 'text-red-400' : 'text-white'}`}>{label}</span>
-      <div className="flex items-center gap-2">
-        {value && <span className="text-xs text-white/35 truncate max-w-[140px]">{value}</span>}
-       
-      </div>
-    </button>
-  )
-}
-
-function Divider() {
-  return <div className="mx-4" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-}
+import { useNavigate } from 'react-router-dom'
 
 export default function Drawer({ open, onClose }) {
-  const { user, profile, logout } = useAuth()
   const navigate = useNavigate()
 
-  async function handleLogout() {
-    await logout()
+  function go(path) {
     onClose()
-    navigate('/login')
+    navigate(path)
   }
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Invisible backdrop */}
       <div
-        className={`fixed inset-0 z-40 transition-opacity duration-300 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        style={{ background: 'rgba(0,0,0,0.5)' }}
+        className={`fixed inset-0 z-40 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onClick={onClose}
       />
 
-      {/* Drawer panel */}
+      {/* Popup menu */}
       <div
-        className={`fixed top-0 left-0 bottom-0 z-50 w-[300px] flex flex-col transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-[52px] left-4 z-50 rounded-2xl overflow-hidden transition-all duration-200 origin-top-left ${
+          open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-90 pointer-events-none'
+        }`}
         style={{
-          background: 'rgba(14,14,14,0.96)',
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
-          borderRight: '1px solid rgba(255,255,255,0.08)',
+          minWidth: '190px',
+          background: 'rgba(18,18,18,0.94)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
         }}
       >
-        {/* Profile section */}
-        <div className="px-5 pt-8 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          {user && profile ? (
-            <>
-              <Avatar user={profile} />
-              <p className="text-white text-base font-semibold mt-4 mb-0.5">{profile.name}</p>
-              <p className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-green-900/40 text-green-400 text-xs font-medium">
-                Tracking money since {formatJoinDate(profile.joinDate)}
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <circle cx="14" cy="10" r="5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"/>
-                  <path d="M4 24c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <p className="text-white text-base font-semibold mt-4 mb-1">Not signed in</p>
-              <p className="text-white/35 text-xs mb-5">Sign in to sync your data</p>
-              <div className="flex gap-3">
-                <Link
-                  to="/login"
-                  onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-center glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200"
-                >
-                  Log In
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-center glass text-white hover:glass-active active:scale-95 transition-all duration-200"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Menu items */}
-        <div className="flex-1 overflow-y-auto py-2">
-          {user && profile && (
-            <>
-              <MenuItem label="Name" value={profile.name} onClick={() => {}} />
-              <Divider />
-              <MenuItem label="Email" value={profile.email || '—'} onClick={() => {}} />
-              <Divider />
-              <MenuItem label="Subscription" value="Free" onClick={() => {}} />
-               <Divider />
-            </>
-          )}
-
-          <MenuItem label="Privacy Policy" onClick={() => {}} />
-          <Divider />
-          <MenuItem label="Terms & Conditions" onClick={() => {}} />
-           <Divider />
-
-          {user && (
-            <>
-              <div className="mt-4" />
-              <MenuItem label="Log Out" danger onClick={handleLogout} />
-            </>
-          )}
-        </div>
+        <button
+          onClick={() => go('/account')}
+          className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
+        >
+          Account
+        </button>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
+        <button
+          onClick={() => go('/subscription')}
+          className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
+        >
+          Subscription
+        </button>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
+        <button
+          onClick={() => go('/settings')}
+          className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
+        >
+          Settings
+        </button>
       </div>
     </>
   )

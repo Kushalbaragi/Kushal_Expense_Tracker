@@ -20,7 +20,7 @@ function CalIcon() {
   )
 }
 
-export default function AddModal({ open, onClose, onAdd, onEdit, editData }) {
+export default function AddModal({ open, onClose, onAdd, onEdit, onDelete, editData }) {
   const isEdit = !!editData
   const [type, setType] = useState('expense')
   const [amount, setAmount] = useState('')
@@ -157,14 +157,33 @@ export default function AddModal({ open, onClose, onAdd, onEdit, editData }) {
             />
           </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={!amount || parseFloat(amount) <= 0}
-            className="w-full py-[14px] rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed glass-active text-white hover:brightness-110"
-          >
-            {isEdit ? 'Update' : 'Add'} {type.charAt(0).toUpperCase() + type.slice(1)}
-          </button>
+          {isEdit ? (
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={!amount || parseFloat(amount) <= 0}
+                className="flex-1 py-[14px] rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed glass-active text-white hover:brightness-110"
+              >
+                Update
+              </button>
+              <button
+                type="button"
+                onClick={() => { onDelete(editData.id); onClose() }}
+                className="flex-1 py-[14px] rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-95"
+                style={{ background: 'rgba(248,113,113,0.12)', color: 'rgba(248,113,113,0.85)' }}
+              >
+                Delete
+              </button>
+            </div>
+          ) : (
+            <button
+              type="submit"
+              disabled={!amount || parseFloat(amount) <= 0}
+              className="w-full py-[14px] rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed glass-active text-white hover:brightness-110"
+            >
+              Add {type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+          )}
         </form>
       </div>
     </>

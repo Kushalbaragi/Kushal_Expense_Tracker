@@ -15,18 +15,6 @@ function MonthGroup({ group, isOverview, isIncome, onDelete, onEdit, idx: groupI
         <span className="text-white/35 text-xs font-medium uppercase tracking-wider">
           {monthLabel(group.month, group.year)}
         </span>
-        {isOverview ? (
-          <span
-            className="text-xs font-semibold"
-            style={{ color: net >= 0 ? 'rgba(74,222,128,0.75)' : 'rgba(248,113,113,0.75)' }}
-          >
-            {net >= 0 ? '+' : '–'}{formatCurrency(Math.abs(net))}
-          </span>
-        ) : (
-          <span className="text-white/40 text-xs font-medium">
-            {formatCurrency(typeTotal)}
-          </span>
-        )}
       </div>
 
       {/* Transactions for this month */}

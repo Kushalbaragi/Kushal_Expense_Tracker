@@ -174,9 +174,7 @@ export default function SummaryCard({
             : deltaText ? deltaStyle : { color: 'rgba(255,255,255,0.2)' }
         }
       >
-        {isOverview ? (
-          <span>{netPositive ? 'Net savings' : 'Net deficit'}</span>
-        ) : deltaText ? (
+        {isOverview ? null : deltaText ? (
           <>
             <AnimatedDelta text={deltaText} />
             {arrow && <span className="text-xs font-medium leading-none">{arrow}</span>}

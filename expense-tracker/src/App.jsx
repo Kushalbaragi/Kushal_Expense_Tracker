@@ -9,6 +9,9 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import AccountPage from './pages/AccountPage'
+import SubscriptionPage from './pages/SubscriptionPage'
+import SettingsPage from './pages/SettingsPage'
 import { useTransactions } from './hooks/useTransactions'
 import { useAuth } from './context/AuthContext'
 import { currentMonthYear } from './utils/format'
@@ -106,6 +109,7 @@ function Dashboard() {
           onClose={handleClose}
           onAdd={addTransaction}
           onEdit={editTransaction}
+          onDelete={deleteTransaction}
           editData={editTx}
         />
       </div>
@@ -121,6 +125,9 @@ export default function App() {
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/account" element={<AccountPage />} />
+      <Route path="/subscription" element={<SubscriptionPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
     </Routes>
   )
 }

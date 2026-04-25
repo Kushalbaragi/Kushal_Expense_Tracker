@@ -13,24 +13,11 @@ export default function TransactionItem({ tx, onDelete, onEdit, isIncome }) {
         </p>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-      <span className="text-sm font-medium"
-        style={{ color: isIncome ? 'rgb(74 222 128 / var(--tw-text-opacity, 0.8))' : '#a3a3a3' }} >
+      <div className="flex items-center shrink-0">
+        <span className="text-sm font-medium"
+          style={{ color: isIncome ? 'rgb(74 222 128 / var(--tw-text-opacity, 0.8))' : '#a3a3a3' }}>
           {isIncome ? '+' : '-'}{formatCurrencyFull(tx.amount)}
         </span>
-
-        {/* Always-visible delete — small grey circle × */}
-        <button
-          onClick={e => { e.stopPropagation(); onDelete(tx.id) }}
-          className="w-4 h-4 rounded-full flex items-center justify-center transition-all duration-150 hover:bg-white/10 shrink-0"
-          style={{ background: 'rgba(255,255,255,0.07)' }}
-          aria-label="Delete"
-        >
-          <svg width="6" height="6" viewBox="0 0 8 8" fill="none">
-            <line x1="1" y1="1" x2="7" y2="7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round"/>
-            <line x1="7" y1="1" x2="1" y2="7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round"/>
-          </svg>
-        </button>
       </div>
     </div>
   )
