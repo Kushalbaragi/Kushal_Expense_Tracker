@@ -17,12 +17,20 @@ function Dashboard() {
   const { month: currMonth, year: currYear } = currentMonthYear()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('expense')
+  const [activeTab,  setActiveTab]  = useState('expense')   // drives transaction list
+  const [chartTab,   setChartTab]   = useState('expense')   // drives chart display
+  const [timeRange,  setTimeRange]  = useState('year')      // drives chart range + list filter
   const [modalOpen, setModalOpen] = useState(false)
   const [editTx, setEditTx] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
+
+  // When expense/income is selected in the header toggle, sync both chart + list
+  function handleChartTabChange(tab) {
+    setChartTab(tab)
+    if (tab !== 'overview') setActiveTab(tab)
+  }
 
   function handleAddClick() {
     if (!user) { navigate('/login'); return }
@@ -43,15 +51,20 @@ function Dashboard() {
     <div className="min-h-screen bg-bg font-sans">
       <div className="mx-auto max-w-[480px] min-h-screen relative">
 
-        <Header onMenuOpen={() => setDrawerOpen(true)} />
+        <Header
+          onMenuOpen={() => setDrawerOpen(true)}
+          chartTab={chartTab}
+          onChartTabChange={handleChartTabChange}
+        />
 
         <SummaryCard
           transactions={transactions}
-          activeTab={activeTab}
+          chartTab={chartTab}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
           selectedMonth={selectedMonth}
           year={currYear}
           onMonthChange={setSelectedMonth}
-          onTabChange={setActiveTab}
         />
 
         <div className="mt-2">
@@ -60,6 +73,7 @@ function Dashboard() {
             activeTab={activeTab}
             selectedMonth={selectedMonth}
             year={currYear}
+            timeRange={timeRange}
             onDelete={deleteTransaction}
             onEdit={openEdit}
           />

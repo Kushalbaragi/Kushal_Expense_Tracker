@@ -9,6 +9,7 @@ export default function BarChart({
   disabledAfterIndex,
   isIncome,
   animKey,
+  labelStep = 1,   // show every Nth label (use 2 for dense 1Y labels)
 }) {
   const n       = values.length
   const GROUP_W = CHART_W / n
@@ -57,18 +58,20 @@ export default function BarChart({
               <rect x={x} y={BAR_HEIGHT - 2} width={BAR_W} height={2} rx={1} fill="transparent" />
             )}
 
-            <text
-              x={x + BAR_W / 2}
-              y={BAR_HEIGHT + 15}
-              textAnchor="middle"
-              fontSize="9"
-              fill={isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.22)'}
-              fontFamily="Inter, sans-serif"
-              fontWeight={isActive ? '600' : '400'}
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-              {labels[i]}
-            </text>
+            {(i % labelStep === 0 || i === n - 1) && (
+              <text
+                x={x + BAR_W / 2}
+                y={BAR_HEIGHT + 15}
+                textAnchor="middle"
+                fontSize="9"
+                fill={isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.22)'}
+                fontFamily="Inter, sans-serif"
+                fontWeight={isActive ? '600' : '400'}
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                {labels[i]}
+              </text>
+            )}
           </g>
         )
       })}

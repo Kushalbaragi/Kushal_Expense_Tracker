@@ -88,7 +88,8 @@ export function getRolling12Months(transactions) {
   const expense = new Array(12).fill(0)
   const labels  = slots.map(s => {
     const abbr = MONTHS_ABBR[s.month]
-    return s.year !== now.getFullYear() ? `${abbr}'${String(s.year).slice(2)}` : abbr
+    // Only mark the year on January (new-year boundary), keep others short
+    return s.month === 0 ? `${abbr}'${String(s.year).slice(2)}` : abbr
   })
   transactions.forEach(tx => {
     const d = new Date(tx.date)
