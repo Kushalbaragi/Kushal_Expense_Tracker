@@ -10,8 +10,8 @@ function BackIcon() {
 
 function CheckIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M2.5 7l3.5 3.5 5.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+      <path d="M2 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   )
 }
@@ -32,29 +32,34 @@ export default function SubscriptionPage() {
       <div className="mx-auto max-w-[480px] min-h-screen flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 pt-12 pb-4">
+        <div className="flex items-center gap-2 px-4 pt-12 pb-2">
           <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white">
             <BackIcon />
           </button>
           <span className="text-white text-base font-semibold">Subscription</span>
         </div>
 
-        <div className="flex-1 px-4 pb-16">
+        <div className="flex-1 px-5 pb-16 flex flex-col">
 
           {/* Hero */}
-          <div className="text-center py-6">
-            <h1 className="text-white text-2xl font-semibold mb-2">Unlock the full experience</h1>
-            <p className="text-white/40 text-sm leading-relaxed max-w-[260px] mx-auto">
-              Simple, honest pricing — no hidden fees, cancel anytime.
+          <div className="py-8 text-center">
+            <p className="text-white/30 text-xs font-medium uppercase tracking-widest mb-3">Choose your plan</p>
+            <h1 className="text-white text-[26px] font-semibold leading-tight mb-3">
+              Simple,<br/>honest pricing.
+            </h1>
+            <p className="text-white/35 text-sm leading-relaxed">
+              Everything you need to track money well.
             </p>
           </div>
 
-          {/* Feature list */}
-          <div className="mb-6 px-2 space-y-2">
+          {/* Features */}
+          <div className="mb-8 space-y-3">
             {FEATURES.map(f => (
               <div key={f} className="flex items-center gap-3">
-                <span className="text-green-400"><CheckIcon /></span>
-                <span className="text-white/60 text-sm">{f}</span>
+                <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-green-400" style={{ background: 'rgba(74,222,128,0.1)' }}>
+                  <CheckIcon />
+                </span>
+                <span className="text-white/55 text-sm">{f}</span>
               </div>
             ))}
           </div>
@@ -64,67 +69,62 @@ export default function SubscriptionPage() {
 
             {/* Yearly */}
             <div
-              className="rounded-2xl px-5 py-5 cursor-pointer active:scale-[0.98] transition-all"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)' }}
+              className="rounded-2xl px-5 py-4 cursor-pointer active:scale-[0.98] transition-transform"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}
             >
-              <div className="flex items-start justify-between mb-1">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-white font-semibold text-base">Yearly</p>
-                  <p className="text-white/35 text-xs mt-0.5">Billed annually</p>
+                  <p className="text-white font-semibold text-[15px]">Yearly</p>
+                  <p className="text-white/30 text-xs mt-0.5">Billed once a year</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-white font-bold text-xl">₹499</p>
-                  <p className="text-white/30 text-xs">/ year</p>
+                  <p className="text-white font-bold text-2xl">₹499</p>
+                  <p className="text-white/25 text-xs">per year</p>
                 </div>
               </div>
-              <div
-                className="mt-3 py-[10px] rounded-xl text-center text-sm font-semibold text-white/80 transition-all"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
-              >
+              <button className="w-full py-3 rounded-xl text-sm font-semibold text-white/70 transition-all active:scale-95"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 Subscribe
-              </div>
+              </button>
             </div>
 
             {/* Lifetime */}
             <div
-              className="rounded-2xl px-5 py-5 cursor-pointer active:scale-[0.98] transition-all relative overflow-hidden"
-              style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.28)' }}
+              className="rounded-2xl px-5 py-4 cursor-pointer active:scale-[0.98] transition-transform"
+              style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.22)' }}
             >
-              {/* Best value badge */}
-              <div
-                className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest"
-                style={{ background: 'rgba(74,222,128,0.15)', color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.25)' }}
-              >
-                Best value
-              </div>
-
-              <div className="flex items-start justify-between mb-1 pr-20">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-white font-semibold text-base">Lifetime</p>
-                  <p className="text-white/35 text-xs mt-0.5">Pay once, own forever</p>
+                  <p className="text-white font-semibold text-[15px]">Lifetime</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-white/30 text-xs">Pay once, own forever</p>
+                    <span
+                      className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(74,222,128,0.14)', color: 'rgba(74,222,128,0.85)' }}
+                    >
+                      Best value
+                    </span>
+                  </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-xl" style={{ color: 'rgba(74,222,128,0.9)' }}>₹1499</p>
-                  <p className="text-white/30 text-xs">one-time</p>
+                  <p className="font-bold text-2xl" style={{ color: 'rgba(74,222,128,0.9)' }}>₹1499</p>
+                  <p className="text-white/25 text-xs">one-time</p>
                 </div>
               </div>
-              <div
-                className="mt-3 py-[10px] rounded-xl text-center text-sm font-semibold transition-all"
-                style={{ background: 'rgba(74,222,128,0.14)', color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.22)' }}
-              >
+              <button className="w-full py-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
+                style={{ background: 'rgba(74,222,128,0.13)', color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.2)' }}>
                 Get Lifetime Access
-              </div>
+              </button>
             </div>
           </div>
 
-          {/* Footer love note */}
-          <div className="mt-10 text-center">
-            <div className="w-12 h-px mx-auto mb-6" style={{ background: 'rgba(255,255,255,0.1)' }} />
-            <p className="text-white/25 text-sm leading-relaxed">
-              Built with <span style={{ color: 'rgba(248,113,113,0.7)' }}>♥</span> by Kushal
-              <br />
-              <span className="text-white/20 text-xs">crafted for real life, not the App Store</span>
+          {/* Footer */}
+          <div className="mt-auto pt-10 text-center">
+            <div className="w-10 h-px mx-auto mb-6" style={{ background: 'rgba(255,255,255,0.08)' }} />
+            <p className="text-white/20 text-sm">
+              Built with <span style={{ color: 'rgba(248,113,113,0.65)' }}>♥</span> by Kushal
             </p>
+            <p className="text-white/15 text-xs mt-1">crafted for real life, not the App Store</p>
           </div>
         </div>
       </div>
