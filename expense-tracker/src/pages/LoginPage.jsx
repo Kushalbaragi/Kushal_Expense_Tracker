@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 function Spinner() {
   return (
@@ -31,10 +32,16 @@ export default function LoginPage() {
     if (!form.email || !form.password) { setError('Please fill in all fields'); return }
     setLoading(true)
     try {
+      const { data: exists } = await supabase.rpc('check_email_exists', { email_input: form.email })
+      if (!exists) {
+        setError('No account found with this email address.')
+        setLoading(false)
+        return
+      }
       await login({ email: form.email, password: form.password })
       navigate('/')
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.')
+      setError('Incorrect password. Please try again.')
     } finally {
       setLoading(false)
     }
