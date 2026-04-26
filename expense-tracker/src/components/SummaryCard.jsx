@@ -6,13 +6,14 @@ import {
   getDelta,
   getMonthTotal,
   getMonthlyTotals,
-  getRolling12Months,
+  getDailyTotals,
   getYearlyTotals,
   monthLabel,
   currentMonthYear,
 } from '../utils/format'
 
 const MONTH_LABELS_SHORT = ['J','F','M','A','M','J','J','A','S','O','N','D']
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 const fmt = new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR',
@@ -52,11 +53,11 @@ function AnimatedDelta({ text }) {
   )
 }
 
-function RangeSelector({ value, onChange, currentYear }) {
+function RangeSelector({ value, onChange, currentYear, currentMonth }) {
   const options = [
-    { id: 'year', label: String(currentYear) },
-    { id: '1y',   label: '1Y' },
-    { id: '5y',   label: '5Y' },
+    { id: 'month', label: MONTH_NAMES[currentMonth] },
+    { id: 'year',  label: String(currentYear) },
+    { id: '5y',    label: '5Y' },
   ]
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
@@ -79,29 +80,30 @@ function RangeSelector({ value, onChange, currentYear }) {
 
 export default function SummaryCard({
   transactions,
-  chartTab,           // 'expense'|'income'|'overview' — from Dashboard
-  timeRange,          // 'year'|'1y'|'5y' — from Dashboard
+  chartTab,
+  timeRange,
   onTimeRangeChange,
   selectedMonth,
   year,
   onMonthChange,
 }) {
-  const { year: currYear } = currentMonthYear()
+  const { month: currMonth, year: currYear } = currentMonthYear()
 
   // ── Chart data ────────────────────────────────────────────────────────────
   const chartData = useMemo(() => {
-    if (timeRange === '1y') return getRolling12Months(transactions)
-    if (timeRange === '5y') return getYearlyTotals(transactions, currYear, 5)
+    if (timeRange === 'month') return getDailyTotals(transactions, currMonth, currYear)
+    if (timeRange === '5y')   return getYearlyTotals(transactions, currYear, 5)
     const { income, expense } = getMonthlyTotals(transactions, year)
     return { income, expense, labels: MONTH_LABELS_SHORT }
-  }, [transactions, timeRange, year, currYear])
+  }, [transactions, timeRange, year, currYear, currMonth])
 
   const barValues = chartTab === 'income' ? chartData.income : chartData.expense
 
   const disabledAfterIndex = useMemo(() => {
+    if (timeRange === 'month') return new Date().getDate() - 1
     if (timeRange !== 'year') return null
-    if (year < currYear)  return null
-    if (year > currYear)  return -1
+    if (year < currYear) return null
+    if (year > currYear) return -1
     return new Date().getMonth()
   }, [timeRange, year, currYear])
 
@@ -117,7 +119,7 @@ export default function SummaryCard({
     return arr.reduce((a, b) => a + b, 0)
   }, [chartTab, chartData, timeRange, transactions, selectedMonth, year])
 
-  // ── Delta (year range only) ───────────────────────────────────────────────
+  // ── Delta (year range, month selection only) ───────────────────────────────
   const delta = useMemo(() => {
     if (chartTab === 'overview' || timeRange !== 'year') return null
     return getDelta(transactions, chartTab, selectedMonth, year)
@@ -134,12 +136,12 @@ export default function SummaryCard({
   const deltaStyle    = deltaGood ? { color: 'rgba(74,222,128,0.9)' } : { color: 'rgba(248,113,113,0.9)' }
 
   const periodLabel = useMemo(() => {
-    if (timeRange === 'year') return monthLabel(selectedMonth, year)
-    if (timeRange === '1y')   return 'Last 12 months'
+    if (timeRange === 'month') return monthLabel(currMonth, currYear)
+    if (timeRange === 'year')  return monthLabel(selectedMonth, year)
     return `${currYear - 4} – ${currYear}`
-  }, [timeRange, selectedMonth, year, currYear])
+  }, [timeRange, selectedMonth, year, currYear, currMonth])
 
-  // Trim line chart to current month for year range
+  // Trim line chart for year range
   const lineChartData = useMemo(() => {
     if (timeRange !== 'year' || year < currYear) return chartData
     const end = new Date().getMonth() + 1
@@ -150,7 +152,8 @@ export default function SummaryCard({
     }
   }, [chartData, timeRange, year, currYear])
 
-  const animKey = `${chartTab}-${timeRange}-${year}`
+  const animKey  = `${chartTab}-${timeRange}-${year}`
+  const labelStep = timeRange === 'month' ? 4 : 1
 
   return (
     <div className="mx-4 mb-2 p-5 overflow-hidden">
@@ -201,11 +204,11 @@ export default function SummaryCard({
           disabledAfterIndex={disabledAfterIndex}
           isIncome={isIncome}
           animKey={animKey}
-          labelStep={timeRange === '1y' ? 2 : 1}
+          labelStep={labelStep}
         />
       )}
 
-      <RangeSelector value={timeRange} onChange={onTimeRangeChange} currentYear={currYear} />
+      <RangeSelector value={timeRange} onChange={onTimeRangeChange} currentYear={currYear} currentMonth={currMonth} />
     </div>
   )
 }

@@ -77,6 +77,22 @@ export function toTitleCase(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 } 
 
+// Daily totals for a given month
+export function getDailyTotals(transactions, month, year) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const income  = new Array(daysInMonth).fill(0)
+  const expense = new Array(daysInMonth).fill(0)
+  const labels  = Array.from({ length: daysInMonth }, (_, i) => String(i + 1))
+  transactions.forEach(tx => {
+    const d = new Date(tx.date)
+    if (d.getMonth() !== month || d.getFullYear() !== year) return
+    const idx = d.getDate() - 1
+    if (tx.type === 'income') income[idx] += tx.amount
+    else expense[idx] += tx.amount
+  })
+  return { income, expense, labels }
+}
+
 // Rolling last 12 months (oldest → newest)
 export function getRolling12Months(transactions) {
   const now = new Date()

@@ -54,7 +54,7 @@ export default function TransactionList({
 
   // Decide whether to group by month
   // Group when: overview mode (any range), OR timeRange is 1y/5y
-  const shouldGroup = isOverview || timeRange !== 'year'
+  const shouldGroup = isOverview || timeRange === '5y'
 
   const filtered = useMemo(() => {
     return transactions
@@ -63,10 +63,6 @@ export default function TransactionList({
         if (!isOverview && tx.type !== activeTab) return false
 
         const d = new Date(tx.date)
-        if (timeRange === '1y') {
-          const cutoff = new Date(now.getFullYear(), now.getMonth() - 11, 1)
-          return d >= cutoff
-        }
         if (timeRange === '5y') {
           return d.getFullYear() >= currYear - 4
         }

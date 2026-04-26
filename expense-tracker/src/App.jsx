@@ -54,7 +54,7 @@ function Dashboard() {
   const navigate = useNavigate()
   const [activeTab,  setActiveTab]  = useState('expense')
   const [chartTab,   setChartTab]   = useState('expense')
-  const [timeRange,  setTimeRange]  = useState('year')
+  const [timeRange,  setTimeRange]  = useState('month')
   const [modalOpen, setModalOpen] = useState(false)
   const [editTx, setEditTx] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)

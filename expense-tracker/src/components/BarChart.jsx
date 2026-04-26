@@ -18,8 +18,8 @@ export default function BarChart({
   const maxVal  = Math.max(...values, 1)
   const svgH    = BAR_HEIGHT + 22
 
-  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(255,255,255,0.82)'
-  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(255,255,255,0.14)'
+  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(251,146,60,0.88)'
+  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(251,146,60,0.20)'
 
   return (
     <svg
