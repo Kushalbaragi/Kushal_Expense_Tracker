@@ -78,8 +78,9 @@ export default function SettingsPage() {
 
   function exportData() {
     if (!transactions.length) return
+    const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date))
     const csv = ['Date,Type,Amount,Description',
-      ...transactions.map(t => `${t.date},${t.type},${t.amount},"${t.description}"`)
+      ...sorted.map(t => `${t.date},${t.type},${t.amount},"${t.description}"`)
     ].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -143,7 +144,7 @@ export default function SettingsPage() {
 
       {/* Privacy Policy modal */}
       <InfoModal open={modal === 'privacy'} title="Privacy Policy" onClose={() => setModal(null)}>
-        <p>Kushal Expense Tracker is designed with your privacy as the top priority.</p>
+        <p>Okana is designed with your privacy as the top priority.</p>
         <p><strong className="text-white/70">Data storage:</strong> All your financial data is stored securely in Supabase with row-level security. Only you can access your own data.</p>
         <p><strong className="text-white/70">No selling:</strong> We do not sell, share, or monetise your personal data in any way.</p>
         <p><strong className="text-white/70">Authentication:</strong> Login is handled by Supabase Auth with industry-standard encryption.</p>
@@ -154,7 +155,7 @@ export default function SettingsPage() {
 
       {/* Terms & Conditions modal */}
       <InfoModal open={modal === 'terms'} title="Terms & Conditions" onClose={() => setModal(null)}>
-        <p>By using Kushal Expense Tracker you agree to the following terms.</p>
+        <p>By using Okana you agree to the following terms.</p>
         <p><strong className="text-white/70">Personal use:</strong> This app is provided for personal, non-commercial use only.</p>
         <p><strong className="text-white/70">Accuracy:</strong> The app is a tracking tool and does not constitute financial advice. Always verify important financial decisions with a qualified professional.</p>
         <p><strong className="text-white/70">Availability:</strong> The app is provided "as is". We make no guarantees regarding uptime or data availability.</p>
@@ -224,7 +225,7 @@ export default function SettingsPage() {
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold text-white" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>K</div>
           <p className="text-white font-semibold text-base">Kushal Baragi</p>
           <p className="text-white/40 text-sm">Built this app to make personal finance simple, beautiful, and private.</p>
-          <p className="text-white/25 text-xs mt-4">Kushal Expense Tracker v{APP_VERSION}<br/>Made with <span style={{ color: 'rgba(248,113,113,0.7)' }}>♥</span> in India</p>
+          <p className="text-white/25 text-xs mt-4">Okana v{APP_VERSION}<br/>Made with <span style={{ color: 'rgba(248,113,113,0.7)' }}>♥</span> in India</p>
         </div>
       </InfoModal>
     </div>

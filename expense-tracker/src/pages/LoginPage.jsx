@@ -51,7 +51,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-[400px]">
         <div className="text-center mb-10">
-          <p className="text-white/30 text-sm mt-2">Track your money, effortlessly.</p>
+          <h1 className="text-white text-4xl font-bold tracking-tight mb-1">Okana</h1>
+          <p className="text-white/30 text-sm">Your money, beautifully tracked.</p>
         </div>
 
         <h2 className="text-white text-2xl font-semibold mb-8 text-center">Welcome back</h2>

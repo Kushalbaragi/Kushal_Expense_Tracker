@@ -131,7 +131,7 @@ export default function SummaryCard({
   const deltaGood     = isIncome ? deltaPositive : !deltaPositive
   const arrow         = delta && delta.diff !== 0 ? (deltaPositive ? '↑' : '↓') : null
   const deltaText     = delta && delta.diff !== 0 ? formatCurrency(Math.abs(delta.diff)) : null
-  const deltaStyle    = deltaGood ? { color: '#16a34a' } : { color: '#b91c1c' }
+  const deltaStyle    = deltaGood ? { color: 'rgba(74,222,128,0.9)' } : { color: 'rgba(248,113,113,0.9)' }
 
   const periodLabel = useMemo(() => {
     if (timeRange === 'year') return monthLabel(selectedMonth, year)

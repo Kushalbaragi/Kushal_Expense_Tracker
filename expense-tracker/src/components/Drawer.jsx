@@ -1,11 +1,19 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Drawer({ open, onClose }) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
   function go(path) {
     onClose()
     navigate(path)
+  }
+
+  async function handleLogout() {
+    onClose()
+    await logout()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -49,6 +57,14 @@ export default function Drawer({ open, onClose }) {
           className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
         >
           Settings
+        </button>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
+        <button
+          onClick={handleLogout}
+          className="w-full text-left px-5 py-[14px] text-sm hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
+          style={{ color: 'rgba(248,113,113,0.8)' }}
+        >
+          Log Out
         </button>
       </div>
     </>

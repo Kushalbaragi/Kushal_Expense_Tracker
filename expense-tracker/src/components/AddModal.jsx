@@ -43,7 +43,7 @@ export default function AddModal({ open, onClose, onAdd, onEdit, onDelete, editD
         setDescription('')
       }
       setCalOpen(false)
-      setTimeout(() => amountRef.current?.focus(), 320)
+      setTimeout(() => { amountRef.current?.focus(); amountRef.current?.select() }, 320)
     }
   }, [open, editData])
 

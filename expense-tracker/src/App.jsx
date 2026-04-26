@@ -16,27 +16,59 @@ import { useTransactions } from './hooks/useTransactions'
 import { useAuth } from './context/AuthContext'
 import { currentMonthYear } from './utils/format'
 
+function GuestLanding() {
+  const navigate = useNavigate()
+  return (
+    <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6 text-center">
+      <div style={{ animation: 'fadeSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) both' }}>
+        <h1 className="text-white text-5xl font-bold tracking-tight mb-2">Okana</h1>
+        <p className="text-white/35 text-sm mb-12 tracking-wide">Your money, beautifully tracked.</p>
+      </div>
+
+      <div className="w-full max-w-[320px] flex flex-col gap-3" style={{ animation: 'fadeSlideUp 0.4s 0.12s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}>
+        <button
+          onClick={() => navigate('/signup')}
+          className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white active:scale-95 transition-all"
+        >
+          Get Started
+        </button>
+        <button
+          onClick={() => navigate('/login')}
+          className="w-full py-[14px] rounded-2xl text-sm font-semibold text-white/60 active:scale-95 transition-all hover:text-white/80"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          Log In
+        </button>
+      </div>
+
+      <p className="text-white/15 text-xs mt-14" style={{ animation: 'fadeSlideUp 0.4s 0.22s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}>
+        Built with ♥ by Kushal
+      </p>
+    </div>
+  )
+}
+
 function Dashboard() {
   const { month: currMonth, year: currYear } = currentMonthYear()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [activeTab,  setActiveTab]  = useState('expense')   // drives transaction list
-  const [chartTab,   setChartTab]   = useState('expense')   // drives chart display
-  const [timeRange,  setTimeRange]  = useState('year')      // drives chart range + list filter
+  const [activeTab,  setActiveTab]  = useState('expense')
+  const [chartTab,   setChartTab]   = useState('expense')
+  const [timeRange,  setTimeRange]  = useState('year')
   const [modalOpen, setModalOpen] = useState(false)
   const [editTx, setEditTx] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
 
-  // When expense/income is selected in the header toggle, sync both chart + list
+  if (!user) return <GuestLanding />
+
   function handleChartTabChange(tab) {
     setChartTab(tab)
     if (tab !== 'overview') setActiveTab(tab)
   }
 
   function handleAddClick() {
-    if (!user) { navigate('/login'); return }
     setModalOpen(true)
   }
 
@@ -51,8 +83,8 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-bg font-sans">
-      <div className="mx-auto max-w-[480px] min-h-screen relative">
+    <div className="bg-bg font-sans h-screen flex flex-col overflow-hidden">
+      <div className="mx-auto w-full max-w-[480px] h-full flex flex-col relative">
 
         <Header
           onMenuOpen={() => setDrawerOpen(true)}
@@ -70,7 +102,8 @@ function Dashboard() {
           onMonthChange={setSelectedMonth}
         />
 
-        <div className="mt-2">
+        {/* Scrollable transaction list */}
+        <div className="flex-1 overflow-y-auto">
           <TransactionList
             transactions={transactions}
             activeTab={activeTab}
