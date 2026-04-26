@@ -164,7 +164,8 @@ export default function AccountPage() {
   const fileRef = useRef(null)
 
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar || null)
-  const [uploading, setUploading] = useState(false)
+  // 'idle' | 'uploading' | 'success'
+  const [uploadState, setUploadState] = useState('idle')
 
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(profile?.name || '')
@@ -184,7 +185,7 @@ export default function AccountPage() {
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    setUploading(true)
+    setUploadState('uploading')
     const ext = file.name.split('.').pop()
     const path = `${user.id}/avatar.${ext}`
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
@@ -192,9 +193,14 @@ export default function AccountPage() {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
       await supabase.auth.updateUser({ data: { avatar_url: urlWithBust } })
-      setAvatarUrl(urlWithBust)
+      setUploadState('success')
+      setTimeout(() => {
+        setAvatarUrl(urlWithBust)
+        setUploadState('idle')
+      }, 1200)
+    } else {
+      setUploadState('idle')
     }
-    setUploading(false)
     e.target.value = ''
   }
 
@@ -236,27 +242,64 @@ export default function AccountPage() {
         </div>
 
         {/* Avatar */}
-        <div className="flex flex-col items-center py-6 gap-2">
+        <div className="flex flex-col items-center py-6">
           <button
-            onClick={() => fileRef.current?.click()}
+            onClick={() => uploadState === 'idle' && fileRef.current?.click()}
             className="relative group"
-            disabled={uploading}
+            style={{ cursor: uploadState === 'idle' ? 'pointer' : 'default' }}
           >
+            {/* Photo or initials — key forces re-mount + animation when URL changes */}
             {avatarUrl ? (
-              <img src={avatarUrl} alt="avatar" className="w-20 h-20 rounded-full object-cover block" style={{ border: '1px solid rgba(255,255,255,0.13)' }} />
+              <img
+                key={avatarUrl}
+                src={avatarUrl}
+                alt="avatar"
+                className="w-20 h-20 rounded-full object-cover block"
+                style={{ border: '1px solid rgba(255,255,255,0.13)', animation: 'scaleIn 0.4s cubic-bezier(0.34,1.2,0.64,1) both' }}
+              />
             ) : (
               <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-semibold" style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.13)' }}>
-                {uploading ? '…' : initials}
+                {initials}
               </div>
             )}
-            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 12V6M6 9l3-3 3 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <rect x="1" y="1" width="16" height="16" rx="4" stroke="white" strokeWidth="1.2" opacity="0.5"/>
-              </svg>
-            </div>
+
+            {/* Uploading: spinner ring */}
+            {uploadState === 'uploading' && (
+              <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.60)' }}>
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none" style={{ animation: 'spin 0.75s linear infinite' }}>
+                  <circle cx="17" cy="17" r="13" stroke="rgba(255,255,255,0.12)" strokeWidth="2.5"/>
+                  <path d="M17 4a13 13 0 0 1 13 13" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+            )}
+
+            {/* Success: green tick */}
+            {uploadState === 'success' && (
+              <div
+                className="absolute inset-0 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(0,0,0,0.60)', animation: 'scaleIn 0.3s cubic-bezier(0.34,1.2,0.64,1) both' }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(74,222,128,0.18)', border: '1.5px solid rgba(74,222,128,0.55)', animation: 'scaleIn 0.35s 0.05s cubic-bezier(0.34,1.2,0.64,1) both', opacity: 0 }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M4 10l4.5 4.5 7.5-8" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* Idle hover: camera icon */}
+            {uploadState === 'idle' && (
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 12V6M6 9l3-3 3 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="1" y="1" width="16" height="16" rx="4" stroke="white" strokeWidth="1.2" opacity="0.5"/>
+                </svg>
+              </div>
+            )}
           </button>
-          {uploading && <p className="text-white/30 text-xs">Uploading…</p>}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
         </div>
 
