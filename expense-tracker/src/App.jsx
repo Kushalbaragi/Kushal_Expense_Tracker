@@ -58,6 +58,7 @@ function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editTx, setEditTx] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)
+  const [selectedYear, setSelectedYear] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
 
@@ -100,6 +101,8 @@ function Dashboard() {
           selectedMonth={selectedMonth}
           year={currYear}
           onMonthChange={setSelectedMonth}
+          selectedYear={selectedYear}
+          onYearChange={setSelectedYear}
         />
 
         {/* Scrollable transaction list */}
@@ -111,6 +114,7 @@ function Dashboard() {
             selectedMonth={selectedMonth}
             year={currYear}
             timeRange={timeRange}
+            selectedYear={selectedYear}
             onDelete={deleteTransaction}
             onEdit={openEdit}
           />

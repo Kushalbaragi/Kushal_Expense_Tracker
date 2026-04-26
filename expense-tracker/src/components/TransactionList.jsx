@@ -44,6 +44,7 @@ export default function TransactionList({
   selectedMonth,
   year,
   timeRange  = 'year',
+  selectedYear,
   onDelete,
   onEdit,
 }) {
@@ -64,6 +65,7 @@ export default function TransactionList({
 
         const d = new Date(tx.date)
         if (timeRange === '5y') {
+          if (selectedYear != null) return d.getFullYear() === selectedYear
           return d.getFullYear() >= currYear - 4
         }
         // 'year' range
@@ -95,8 +97,8 @@ export default function TransactionList({
 
   return (
     <div className="px-4 pb-28">
-      <p className="text-white/25 text-xs font-medium uppercase tracking-widest mb-3 px-1">
-        {count > 0 ? `${count} Transaction${count !== 1 ? 's' : ''}` : 'Transactions'}
+      <p className="text-white/25 text-xs font-medium uppercase tracking-wide mb-3 px-1">
+        Transactions
       </p>
 
       {count === 0 ? (

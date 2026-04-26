@@ -18,8 +18,8 @@ export default function BarChart({
   const maxVal  = Math.max(...values, 1)
   const svgH    = BAR_HEIGHT + 22
 
-  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(251,146,60,0.88)'
-  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(251,146,60,0.20)'
+  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(248,113,113,0.88)'
+  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(248,113,113,0.22)'
 
   return (
     <svg
@@ -28,6 +28,15 @@ export default function BarChart({
       className="w-full"
       style={{ overflow: 'visible' }}
     >
+      {/* Dotted divider between bars and labels */}
+      <line
+        x1={0} y1={BAR_HEIGHT + 2}
+        x2={CHART_W} y2={BAR_HEIGHT + 2}
+        stroke="rgba(255,255,255,0.10)"
+        strokeWidth="0.8"
+        strokeDasharray="2 3"
+      />
+
       {values.map((v, i) => {
         const x          = i * GROUP_W + (GROUP_W - BAR_W) / 2
         const h          = (v / maxVal) * BAR_HEIGHT
