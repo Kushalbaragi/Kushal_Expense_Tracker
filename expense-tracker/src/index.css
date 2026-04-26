@@ -60,6 +60,18 @@ input[type='number'] { -moz-appearance: textfield; }
   to   { stroke-dashoffset: 0; }
 }
 
+@keyframes blurFadeOut {
+  0%   { filter: blur(0px) brightness(1);   transform: scale(1);    opacity: 1; }
+  60%  { filter: blur(14px) brightness(1.1); transform: scale(1.04); opacity: 0.5; }
+  100% { filter: blur(22px) brightness(1.2); transform: scale(1.07); opacity: 0; }
+}
+
+@keyframes blurFadeIn {
+  0%   { filter: blur(22px) brightness(1.2); transform: scale(1.07); opacity: 0; }
+  40%  { filter: blur(14px) brightness(1.1); transform: scale(1.04); opacity: 0.5; }
+  100% { filter: blur(0px) brightness(1);   transform: scale(1);    opacity: 1; }
+}
+
 @keyframes barGrow {
   from { transform: scaleY(0); opacity: 0; }
   to   { transform: scaleY(1); opacity: 1; }

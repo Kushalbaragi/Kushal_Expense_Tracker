@@ -164,7 +164,8 @@ export default function AccountPage() {
   const fileRef = useRef(null)
 
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar || null)
-  // 'idle' | 'uploading' | 'success'
+  const [incomingUrl, setIncomingUrl] = useState(null)
+  // 'idle' | 'uploading' | 'transitioning'
   const [uploadState, setUploadState] = useState('idle')
 
   const [editingName, setEditingName] = useState(false)
@@ -182,7 +183,10 @@ export default function AccountPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [working, setWorking] = useState(false)
 
-  const RING_DURATION = 2000 // ms — must match ringFill CSS animation duration
+  const RING_DURATION = 2000
+  const TRANSITION_DURATION = 1400
+
+  const delay = ms => new Promise(r => setTimeout(r, ms))
 
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0]
@@ -196,12 +200,17 @@ export default function AccountPage() {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
       await supabase.auth.updateUser({ data: { avatar_url: urlWithBust } })
-      // Wait for ring to finish if upload was faster
+      // Wait for ring animation to complete
       const remaining = Math.max(0, RING_DURATION - (Date.now() - start))
-      setTimeout(() => {
-        setAvatarUrl(urlWithBust)
-        setUploadState('idle')
-      }, remaining)
+      await delay(remaining)
+      // Start blur crossfade: show old + new overlaid
+      setIncomingUrl(urlWithBust)
+      setUploadState('transitioning')
+      // Wait for crossfade to finish, then swap cleanly
+      await delay(TRANSITION_DURATION)
+      setAvatarUrl(urlWithBust)
+      setIncomingUrl(null)
+      setUploadState('idle')
     } else {
       setUploadState('idle')
     }
@@ -250,16 +259,32 @@ export default function AccountPage() {
           <button
             onClick={() => uploadState === 'idle' && fileRef.current?.click()}
             className="relative group"
-            style={{ cursor: uploadState === 'idle' ? 'pointer' : 'default' }}
+            style={{ cursor: uploadState === 'idle' ? 'pointer' : 'default', outline: 'none' }}
           >
             {/* Photo or initials */}
-            {avatarUrl ? (
+            {uploadState === 'transitioning' ? (
+              <div style={{ position: 'relative', width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.13)' }}>
+                {/* Old photo blurs out */}
+                {avatarUrl && (
+                  <img
+                    src={avatarUrl}
+                    alt="avatar"
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', animation: `blurFadeOut ${TRANSITION_DURATION}ms cubic-bezier(0.4,0,0.6,1) forwards` }}
+                  />
+                )}
+                {/* New photo blurs in */}
+                <img
+                  src={incomingUrl}
+                  alt="avatar"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', animation: `blurFadeIn ${TRANSITION_DURATION}ms cubic-bezier(0.4,0,0.6,1) forwards` }}
+                />
+              </div>
+            ) : avatarUrl ? (
               <img
-                key={avatarUrl}
                 src={avatarUrl}
                 alt="avatar"
                 className="w-20 h-20 rounded-full object-cover block"
-                style={{ border: '1px solid rgba(255,255,255,0.13)', animation: 'scaleIn 0.4s cubic-bezier(0.34,1.2,0.64,1) both' }}
+                style={{ border: '1px solid rgba(255,255,255,0.13)' }}
               />
             ) : (
               <div className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-semibold" style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.13)' }}>
