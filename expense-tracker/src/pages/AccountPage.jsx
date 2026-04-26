@@ -182,9 +182,12 @@ export default function AccountPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [working, setWorking] = useState(false)
 
+  const RING_DURATION = 2000 // ms — must match ringFill CSS animation duration
+
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
+    const start = Date.now()
     setUploadState('uploading')
     const ext = file.name.split('.').pop()
     const path = `${user.id}/avatar.${ext}`
@@ -193,11 +196,12 @@ export default function AccountPage() {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
       await supabase.auth.updateUser({ data: { avatar_url: urlWithBust } })
-      setUploadState('success')
+      // Wait for ring to finish if upload was faster
+      const remaining = Math.max(0, RING_DURATION - (Date.now() - start))
       setTimeout(() => {
         setAvatarUrl(urlWithBust)
         setUploadState('idle')
-      }, 1200)
+      }, remaining)
     } else {
       setUploadState('idle')
     }
@@ -248,7 +252,7 @@ export default function AccountPage() {
             className="relative group"
             style={{ cursor: uploadState === 'idle' ? 'pointer' : 'default' }}
           >
-            {/* Photo or initials — key forces re-mount + animation when URL changes */}
+            {/* Photo or initials */}
             {avatarUrl ? (
               <img
                 key={avatarUrl}
@@ -263,31 +267,30 @@ export default function AccountPage() {
               </div>
             )}
 
-            {/* Uploading: spinner ring */}
+            {/* Green progress ring — drawn outside the circle */}
             {uploadState === 'uploading' && (
-              <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.60)' }}>
-                <svg width="34" height="34" viewBox="0 0 34 34" fill="none" style={{ animation: 'spin 0.75s linear infinite' }}>
-                  <circle cx="17" cy="17" r="13" stroke="rgba(255,255,255,0.12)" strokeWidth="2.5"/>
-                  <path d="M17 4a13 13 0 0 1 13 13" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </div>
-            )}
-
-            {/* Success: green tick */}
-            {uploadState === 'success' && (
-              <div
-                className="absolute inset-0 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(0,0,0,0.60)', animation: 'scaleIn 0.3s cubic-bezier(0.34,1.2,0.64,1) both' }}
+              <svg
+                style={{ position: 'absolute', top: -5, left: -5, pointerEvents: 'none' }}
+                width="90" height="90" viewBox="0 0 90 90"
               >
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(74,222,128,0.18)', border: '1.5px solid rgba(74,222,128,0.55)', animation: 'scaleIn 0.35s 0.05s cubic-bezier(0.34,1.2,0.64,1) both', opacity: 0 }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M4 10l4.5 4.5 7.5-8" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-              </div>
+                {/* Dim track */}
+                <circle cx="45" cy="45" r="42" fill="none" stroke="rgba(74,222,128,0.15)" strokeWidth="3"/>
+                {/* Animated fill */}
+                <circle
+                  cx="45" cy="45" r="42"
+                  fill="none"
+                  stroke="rgba(74,222,128,0.9)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray="264"
+                  strokeDashoffset="264"
+                  style={{
+                    transformOrigin: 'center',
+                    transform: 'rotate(-90deg)',
+                    animation: `ringFill ${RING_DURATION}ms linear forwards`,
+                  }}
+                />
+              </svg>
             )}
 
             {/* Idle hover: camera icon */}

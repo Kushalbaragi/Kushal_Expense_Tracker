@@ -55,6 +55,11 @@ input[type='number'] { -moz-appearance: textfield; }
   to   { width: 100%; }
 }
 
+@keyframes ringFill {
+  from { stroke-dashoffset: 264; }
+  to   { stroke-dashoffset: 0; }
+}
+
 @keyframes barGrow {
   from { transform: scaleY(0); opacity: 0; }
   to   { transform: scaleY(1); opacity: 1; }
