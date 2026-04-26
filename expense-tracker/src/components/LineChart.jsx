@@ -23,7 +23,7 @@ function areaPath(pts, bottom) {
   return `${line} L${pts[pts.length - 1].x.toFixed(1)},${bottom} L${pts[0].x.toFixed(1)},${bottom} Z`
 }
 
-export default function LineChart({ incomeData, expenseData, labels, animKey, onPointClick, selectedPoint }) {
+export default function LineChart({ incomeData, expenseData, labels, animKey }) {
   const rawId = useId()
   const uid = rawId.replace(/[^a-zA-Z0-9]/g, 'x')
 
@@ -88,12 +88,6 @@ export default function LineChart({ incomeData, expenseData, labels, animKey, on
         </clipPath>
       </defs>
 
-      {/* Subtle baseline */}
-      <line
-        x1="0" y1={bottom} x2={CHART_W} y2={bottom}
-        stroke="rgba(255,255,255,0.06)" strokeWidth="1"
-      />
-
       {/* Areas + lines — all clipped for the grow animation */}
       <g clipPath={`url(#clip-${uid})`}>
         <path d={incomeArea}  fill={`url(#ig-${uid})`} />
@@ -125,47 +119,27 @@ export default function LineChart({ incomeData, expenseData, labels, animKey, on
           cx={expensePts[n - 1].x} cy={expensePts[n - 1].y}
           r="2.5" fill="#f87171"
         />
+
       </g>
 
-      {/* Clickable hit areas per point */}
-      {onPointClick && labels.map((_, i) => (
-        <rect
-          key={`hit-${i}`}
-          x={Math.max(0, i * stepX - stepX / 2)}
-          y={0}
-          width={stepX}
-          height={bottom}
-          fill="transparent"
-          style={{ cursor: 'pointer' }}
-          onClick={() => onPointClick(i === selectedPoint ? null : i)}
-        />
-      ))}
-
-      {/* Selected point indicator */}
-      {selectedPoint != null && (
-        <>
-          <line
-            x1={selectedPoint * stepX} y1={PAD_TOP}
-            x2={selectedPoint * stepX} y2={bottom}
-            stroke="rgba(255,255,255,0.12)"
-            strokeWidth="1"
-            strokeDasharray="2 3"
-          />
-          <circle cx={incomePts[selectedPoint].x} cy={incomePts[selectedPoint].y} r="3.5" fill="#4ade80" />
-          <circle cx={expensePts[selectedPoint].x} cy={expensePts[selectedPoint].y} r="3.5" fill="#f87171" />
-        </>
-      )}
+      {/* Dotted baseline */}
+      <line
+        x1="0" y1={bottom} x2={CHART_W} y2={bottom}
+        stroke="rgba(255,255,255,0.18)"
+        strokeWidth="1"
+        strokeDasharray="2 3"
+      />
 
       {/* X-axis labels */}
       {labels.map((lbl, i) =>
-        showLabel(i) && (
+        showLabel(i) && lbl && (
           <text
             key={i}
             x={i * stepX}
             y={svgH - 2}
             textAnchor={i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}
             fontSize="8.5"
-            fill={i === selectedPoint ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.22)'}
+            fill="rgba(255,255,255,0.22)"
             fontFamily="inherit"
           >
             {lbl}

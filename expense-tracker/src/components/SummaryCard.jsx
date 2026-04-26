@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import BarChart  from './BarChart'
 import LineChart from './LineChart'
 import {
@@ -7,7 +7,8 @@ import {
   getMonthTotal,
   getMonthlyTotals,
   getDailyTotals,
-  getYearlyTotals,
+  getLifetimeMonthly,
+  getLifetimeYearly,
   currentMonthYear,
 } from '../utils/format'
 
@@ -56,7 +57,7 @@ function RangeSelector({ value, onChange, currentYear, currentMonth }) {
   const options = [
     { id: 'month', label: MONTH_NAMES[currentMonth] },
     { id: 'year',  label: String(currentYear) },
-    { id: '5y',    label: '5Y' },
+    { id: '5y',    label: 'Lifetime' },
   ]
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
@@ -92,17 +93,20 @@ export default function SummaryCard({
 }) {
   const { month: currMonth, year: currYear } = currentMonthYear()
 
-  const yearsList = useMemo(() =>
-    Array.from({ length: 5 }, (_, i) => currYear - 4 + i)
-  , [currYear])
-
   // ── Chart data ────────────────────────────────────────────────────────────
   const chartData = useMemo(() => {
     if (timeRange === 'month') return getDailyTotals(transactions, currMonth, currYear)
-    if (timeRange === '5y')   return getYearlyTotals(transactions, currYear, 5)
+    if (timeRange === '5y')   return chartTab === 'overview'
+      ? getLifetimeMonthly(transactions)
+      : getLifetimeYearly(transactions)
     const { income, expense } = getMonthlyTotals(transactions, year)
     return { income, expense, labels: MONTH_LABELS_SHORT }
-  }, [transactions, timeRange, year, currYear, currMonth])
+  }, [transactions, timeRange, year, currYear, currMonth, chartTab])
+
+  // Derived year list from lifetime data (replaces fixed 5-year window)
+  const yearsList = useMemo(() =>
+    timeRange === '5y' ? (chartData.years ?? chartData.labels.map(Number)) : []
+  , [timeRange, chartData])
 
   const barValues = chartTab === 'income' ? chartData.income : chartData.expense
 
@@ -168,9 +172,6 @@ export default function SummaryCard({
   const animKey  = `${chartTab}-${timeRange}-${year}`
   const labelStep = timeRange === 'month' ? 4 : 1
 
-  // Overview: selected point for info box
-  const [selectedPoint, setSelectedPoint] = useState(null)
-  useEffect(() => { setSelectedPoint(null) }, [animKey])
 
   return (
     <div className="mx-4 mb-2 p-5 overflow-hidden">
@@ -211,8 +212,6 @@ export default function SummaryCard({
           expenseData={lineChartData.expense}
           labels={lineChartData.labels}
           animKey={animKey}
-          onPointClick={setSelectedPoint}
-          selectedPoint={selectedPoint}
         />
       ) : (
         <BarChart
@@ -238,21 +237,8 @@ export default function SummaryCard({
         />
       )}
 
-      {/* Overview selected point info box */}
-      {isOverview && selectedPoint != null && (
-        <div className="flex items-center justify-center gap-4 mt-2 mb-1 py-2 px-4 rounded-xl mx-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <span className="text-[11px] font-medium" style={{ color: 'rgba(74,222,128,0.9)' }}>
-            ↑ {formatCurrency(chartData.income[selectedPoint])}
-          </span>
-          <span className="text-white/20 text-xs">·</span>
-          <span className="text-[11px] font-medium" style={{ color: 'rgba(248,113,113,0.9)' }}>
-            ↓ {formatCurrency(chartData.expense[selectedPoint])}
-          </span>
-          <span className="text-white/30 text-[10px] ml-1">{chartData.labels[selectedPoint]}</span>
-        </div>
-      )}
 
-      <RangeSelector value={timeRange} onChange={onTimeRangeChange} currentYear={currYear} currentMonth={currMonth} />
+<RangeSelector value={timeRange} onChange={onTimeRangeChange} currentYear={currYear} currentMonth={currMonth} />
     </div>
   )
 }
