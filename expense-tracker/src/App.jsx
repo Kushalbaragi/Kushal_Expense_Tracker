@@ -51,15 +51,17 @@ function GuestLanding() {
 function Dashboard() {
   const { month: currMonth, year: currYear } = currentMonthYear()
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const [activeTab,  setActiveTab]  = useState('expense')
-  const [chartTab,   setChartTab]   = useState('expense')
-  const [timeRange,  setTimeRange]  = useState('month')
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editTx, setEditTx] = useState(null)
+  const [activeTab,    setActiveTab]    = useState('expense')
+  const [chartTab,     setChartTab]     = useState('expense')
+  const [timeRange,    setTimeRange]    = useState('month')
+  const [modalOpen,    setModalOpen]    = useState(false)
+  const [editTx,       setEditTx]       = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)
-  const [selectedYear, setSelectedYear] = useState(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedYear,  setSelectedYear]  = useState(null)
+  const [selectedDay,   setSelectedDay]   = useState(null)
+  const [drawerOpen,   setDrawerOpen]   = useState(false)
+  const [activePage,   setActivePage]   = useState(null)  // 'account'|'subscription'|'settings'
+  const [pageVisible,  setPageVisible]  = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
 
   if (!user) return <GuestLanding />
@@ -69,19 +71,28 @@ function Dashboard() {
     if (tab !== 'overview') setActiveTab(tab)
   }
 
-  function handleAddClick() {
-    setModalOpen(true)
+  function handleTimeRangeChange(range) {
+    setTimeRange(range)
+    setSelectedDay(null)
+    if (range !== '5y') setSelectedYear(null)
   }
 
-  function openEdit(tx) {
-    setEditTx(tx)
-    setModalOpen(true)
+  function handleDayChange(day) {
+    setSelectedDay(prev => prev === day ? null : day)
   }
 
-  function handleClose() {
-    setModalOpen(false)
-    setEditTx(null)
+  function openPage(page) {
+    setActivePage(page)
+    requestAnimationFrame(() => requestAnimationFrame(() => setPageVisible(true)))
   }
+
+  function closePage() {
+    setPageVisible(false)
+    setTimeout(() => setActivePage(null), 280)
+  }
+
+  function openEdit(tx) { setEditTx(tx); setModalOpen(true) }
+  function handleClose() { setModalOpen(false); setEditTx(null) }
 
   return (
     <div className="bg-bg font-sans h-screen flex flex-col overflow-hidden">
@@ -97,15 +108,16 @@ function Dashboard() {
           transactions={transactions}
           chartTab={chartTab}
           timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
+          onTimeRangeChange={handleTimeRangeChange}
           selectedMonth={selectedMonth}
           year={currYear}
           onMonthChange={setSelectedMonth}
           selectedYear={selectedYear}
           onYearChange={setSelectedYear}
+          selectedDay={selectedDay}
+          onDayChange={handleDayChange}
         />
 
-        {/* Scrollable transaction list */}
         <div className="flex-1 overflow-y-auto">
           <TransactionList
             transactions={transactions}
@@ -115,14 +127,14 @@ function Dashboard() {
             year={currYear}
             timeRange={timeRange}
             selectedYear={selectedYear}
+            selectedDay={selectedDay}
             onDelete={deleteTransaction}
             onEdit={openEdit}
           />
         </div>
 
-        {/* Floating + button */}
         <button
-          onClick={handleAddClick}
+          onClick={() => setModalOpen(true)}
           className="fixed bottom-8 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center z-30 active:scale-90 transition-transform duration-150"
           style={{
             background: 'rgba(255,255,255,0.10)',
@@ -139,7 +151,7 @@ function Dashboard() {
           </svg>
         </button>
 
-        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onOpenPage={openPage} />
 
         <AddModal
           open={modalOpen}
@@ -150,6 +162,18 @@ function Dashboard() {
           editData={editTx}
         />
       </div>
+
+      {/* In-app page overlay (account / subscription / settings) */}
+      {activePage && (
+        <div
+          className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto transition-transform duration-[280ms] ease-out"
+          style={{ transform: pageVisible ? 'translateX(0)' : 'translateX(100%)' }}
+        >
+          {activePage === 'account'      && <AccountPage      onBack={closePage} />}
+          {activePage === 'subscription' && <SubscriptionPage onBack={closePage} />}
+          {activePage === 'settings'     && <SettingsPage     onBack={closePage} />}
+        </div>
+      )}
     </div>
   )
 }
@@ -162,9 +186,6 @@ export default function App() {
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/account" element={<AccountPage />} />
-      <Route path="/subscription" element={<SubscriptionPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
     </Routes>
   )
 }

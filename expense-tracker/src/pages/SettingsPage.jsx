@@ -60,8 +60,9 @@ function InfoModal({ open, title, children, onClose }) {
   )
 }
 
-export default function SettingsPage() {
+export default function SettingsPage({ onBack }) {
   const navigate = useNavigate()
+  const handleBack = () => onBack ? onBack() : navigate(-1)
   const { transactions } = useTransactions()
 
   const [modal, setModal] = useState(null) // 'privacy' | 'terms' | 'developer' | 'contact' | 'feedback'
@@ -97,7 +98,7 @@ export default function SettingsPage() {
 
         {/* Header */}
         <div className="flex items-center gap-2 px-4 pt-12 pb-4">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white">
+          <button onClick={handleBack} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white">
             <BackIcon />
           </button>
           <span className="text-white text-base font-semibold">Settings</span>
@@ -225,7 +226,35 @@ export default function SettingsPage() {
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold text-white" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>K</div>
           <p className="text-white font-semibold text-base">Kushal Baragi</p>
           <p className="text-white/40 text-sm">Built this app to make personal finance simple, beautiful, and private.</p>
-          <p className="text-white/25 text-xs mt-4">Okana v{APP_VERSION}<br/>Made with <span style={{ color: 'rgba(248,113,113,0.7)' }}>♥</span> in India</p>
+          <div className="flex justify-center gap-3 pt-2">
+            <a
+              href="https://instagram.com/kushalbaragi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs text-white/50 hover:text-white/80 transition-colors"
+              style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" strokeWidth="1.5"/>
+                <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/>
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+              </svg>
+              Instagram
+            </a>
+            <a
+              href="https://twitter.com/kushalbaragi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs text-white/50 hover:text-white/80 transition-colors"
+              style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              Twitter
+            </a>
+          </div>
+          <p className="text-white/20 text-xs pt-2">Okana v{APP_VERSION} · Made with <span style={{ color: 'rgba(248,113,113,0.65)' }}>♥</span> in India</p>
         </div>
       </InfoModal>
     </div>

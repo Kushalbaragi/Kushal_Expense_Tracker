@@ -158,9 +158,10 @@ function ChangePasswordModal({ open, onClose }) {
   )
 }
 
-export default function AccountPage() {
+export default function AccountPage({ onBack }) {
   const { user, profile, logout } = useAuth()
   const navigate = useNavigate()
+  const handleBack = () => onBack ? onBack() : navigate(-1)
   const fileRef = useRef(null)
 
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar || null)
@@ -248,7 +249,7 @@ export default function AccountPage() {
 
         {/* Header */}
         <div className="flex items-center gap-2 px-4 pt-12 pb-4">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white">
+          <button onClick={handleBack} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white">
             <BackIcon />
           </button>
           <span className="text-white text-base font-semibold">Account</span>

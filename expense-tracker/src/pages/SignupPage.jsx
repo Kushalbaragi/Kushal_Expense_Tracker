@@ -114,11 +114,9 @@ export default function SignupPage() {
     <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-[400px]">
         <div className="text-center mb-10">
-          <h1 className="text-white text-4xl font-bold tracking-tight mb-1">Okana</h1>
+          <h1 className="text-white text-xl font-semibold tracking-tight mb-1">Okana</h1>
           <p className="text-white/30 text-sm">Your money, beautifully tracked.</p>
         </div>
-
-        <h2 className="text-white text-2xl font-semibold mb-8 text-center">Create account</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
@@ -162,7 +160,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white hover:brightness-110 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white active:scale-95 transition-all duration-200 mt-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

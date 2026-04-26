@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function Drawer({ open, onClose }) {
+export default function Drawer({ open, onClose, onOpenPage }) {
   const navigate = useNavigate()
   const { logout } = useAuth()
 
-  function go(path) {
+  function openPage(page) {
     onClose()
-    navigate(path)
+    onOpenPage(page)
   }
 
   async function handleLogout() {
@@ -18,13 +18,11 @@ export default function Drawer({ open, onClose }) {
 
   return (
     <>
-      {/* Invisible backdrop */}
       <div
         className={`fixed inset-0 z-40 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onClick={onClose}
       />
 
-      {/* Popup menu */}
       <div
         className={`fixed top-[52px] left-4 z-50 rounded-2xl overflow-hidden transition-all duration-200 origin-top-left ${
           open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-90 pointer-events-none'
@@ -38,34 +36,13 @@ export default function Drawer({ open, onClose }) {
           boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
         }}
       >
-        <button
-          onClick={() => go('/account')}
-          className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
-        >
-          Account
-        </button>
+        <button onClick={() => openPage('account')} className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150">Account</button>
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
-        <button
-          onClick={() => go('/subscription')}
-          className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
-        >
-          Subscription
-        </button>
+        <button onClick={() => openPage('subscription')} className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150">Subscription</button>
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
-        <button
-          onClick={() => go('/settings')}
-          className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
-        >
-          Settings
-        </button>
+        <button onClick={() => openPage('settings')} className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150">Settings</button>
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
-        <button
-          onClick={handleLogout}
-          className="w-full text-left px-5 py-[14px] text-sm hover:bg-white/5 active:bg-white/10 transition-colors duration-150"
-          style={{ color: 'rgba(248,113,113,0.8)' }}
-        >
-          Log Out
-        </button>
+        <button onClick={handleLogout} className="w-full text-left px-5 py-[14px] text-sm hover:bg-white/5 active:bg-white/10 transition-colors duration-150" style={{ color: 'rgba(248,113,113,0.8)' }}>Log Out</button>
       </div>
     </>
   )

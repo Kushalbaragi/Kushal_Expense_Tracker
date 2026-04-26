@@ -6,10 +6,11 @@ export default function BarChart({
   labels,
   activeIndex,
   onBarClick,
+  onDeselect,
   disabledAfterIndex,
   isIncome,
   animKey,
-  labelStep = 1,   // show every Nth label (use 2 for dense 1Y labels)
+  labelStep = 1,
 }) {
   const n       = values.length
   const GROUP_W = CHART_W / n
@@ -18,8 +19,8 @@ export default function BarChart({
   const maxVal  = Math.max(...values, 1)
   const svgH    = BAR_HEIGHT + 22
 
-  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(248,113,113,0.88)'
-  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(248,113,113,0.22)'
+  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(255,255,255,0.80)'
+  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(255,255,255,0.14)'
 
   return (
     <svg
@@ -28,6 +29,11 @@ export default function BarChart({
       className="w-full"
       style={{ overflow: 'visible' }}
     >
+      {/* Background — click to deselect */}
+      {onDeselect && (
+        <rect x={0} y={0} width={CHART_W} height={BAR_HEIGHT} fill="transparent" onClick={onDeselect} />
+      )}
+
       {/* Dotted divider between bars and labels */}
       <line
         x1={0} y1={BAR_HEIGHT + 2}
@@ -67,14 +73,14 @@ export default function BarChart({
               <rect x={x} y={BAR_HEIGHT - 2} width={BAR_W} height={2} rx={1} fill="transparent" />
             )}
 
-            {(i % labelStep === 0 || i === n - 1) && (
+            {(i % labelStep === 0 || (i === n - 1 && (n - 1) - Math.floor((n - 2) / labelStep) * labelStep > 1)) && (
               <text
                 x={x + BAR_W / 2}
                 y={BAR_HEIGHT + 15}
                 textAnchor="middle"
                 fontSize="9"
                 fill={isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.22)'}
-                fontFamily="Inter, sans-serif"
+                fontFamily="inherit"
                 fontWeight={isActive ? '600' : '400'}
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >

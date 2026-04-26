@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import BarChart  from './BarChart'
 import LineChart from './LineChart'
 import {
@@ -8,7 +8,6 @@ import {
   getMonthlyTotals,
   getDailyTotals,
   getYearlyTotals,
-  monthLabel,
   currentMonthYear,
 } from '../utils/format'
 
@@ -28,7 +27,7 @@ function AnimatedAmount({ value }) {
         <span
           key={i}
           className={/\s/.test(char) ? 'inline-block w-[0.3ch]' : 'digit-up inline-block'}
-          style={{ animationDelay: `${i * 30}ms` }}
+          style={{ animationDelay: `${i * 22}ms` }}
         >
           {char}
         </span>
@@ -44,7 +43,7 @@ function AnimatedDelta({ text }) {
         <span
           key={i}
           className={/\s/.test(char) ? 'inline-block w-[0.25ch]' : 'digit-up inline-block'}
-          style={{ animationDelay: `${i * 25}ms` }}
+          style={{ animationDelay: `${i * 20}ms` }}
         >
           {char}
         </span>
@@ -88,6 +87,8 @@ export default function SummaryCard({
   onMonthChange,
   selectedYear,
   onYearChange,
+  selectedDay,
+  onDayChange,
 }) {
   const { month: currMonth, year: currYear } = currentMonthYear()
 
@@ -148,7 +149,7 @@ export default function SummaryCard({
 
   const periodLabel = useMemo(() => {
     if (timeRange === 'month') return MONTH_NAMES[currMonth]
-    if (timeRange === 'year')  return monthLabel(selectedMonth, year)
+    if (timeRange === 'year')  return MONTH_NAMES[selectedMonth]
     if (selectedYear != null)  return String(selectedYear)
     return `${currYear - 4} – ${currYear}`
   }, [timeRange, selectedMonth, year, currYear, currMonth, selectedYear])
@@ -166,6 +167,10 @@ export default function SummaryCard({
 
   const animKey  = `${chartTab}-${timeRange}-${year}`
   const labelStep = timeRange === 'month' ? 4 : 1
+
+  // Overview: selected point for info box
+  const [selectedPoint, setSelectedPoint] = useState(null)
+  useEffect(() => { setSelectedPoint(null) }, [animKey])
 
   return (
     <div className="mx-4 mb-2 p-5 overflow-hidden">
@@ -206,26 +211,45 @@ export default function SummaryCard({
           expenseData={lineChartData.expense}
           labels={lineChartData.labels}
           animKey={animKey}
+          onPointClick={setSelectedPoint}
+          selectedPoint={selectedPoint}
         />
       ) : (
         <BarChart
           values={barValues}
           labels={chartData.labels}
           activeIndex={
+            timeRange === 'month' && selectedDay != null ? selectedDay - 1 :
             timeRange === 'year' ? selectedMonth :
             timeRange === '5y' && selectedYear != null ? yearsList.indexOf(selectedYear) :
             -1
           }
           onBarClick={
+            timeRange === 'month' ? (i) => onDayChange(i + 1) :
             timeRange === 'year' ? onMonthChange :
             timeRange === '5y' ? (i) => onYearChange(yearsList[i]) :
             null
           }
+          onDeselect={timeRange === 'month' ? () => onDayChange(null) : null}
           disabledAfterIndex={disabledAfterIndex}
           isIncome={isIncome}
           animKey={animKey}
           labelStep={labelStep}
         />
+      )}
+
+      {/* Overview selected point info box */}
+      {isOverview && selectedPoint != null && (
+        <div className="flex items-center justify-center gap-4 mt-2 mb-1 py-2 px-4 rounded-xl mx-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <span className="text-[11px] font-medium" style={{ color: 'rgba(74,222,128,0.9)' }}>
+            ↑ {formatCurrency(chartData.income[selectedPoint])}
+          </span>
+          <span className="text-white/20 text-xs">·</span>
+          <span className="text-[11px] font-medium" style={{ color: 'rgba(248,113,113,0.9)' }}>
+            ↓ {formatCurrency(chartData.expense[selectedPoint])}
+          </span>
+          <span className="text-white/30 text-[10px] ml-1">{chartData.labels[selectedPoint]}</span>
+        </div>
       )}
 
       <RangeSelector value={timeRange} onChange={onTimeRangeChange} currentYear={currYear} currentMonth={currMonth} />

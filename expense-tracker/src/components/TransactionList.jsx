@@ -45,6 +45,7 @@ export default function TransactionList({
   year,
   timeRange  = 'year',
   selectedYear,
+  selectedDay,
   onDelete,
   onEdit,
 }) {
@@ -53,23 +54,27 @@ export default function TransactionList({
   const now        = new Date()
   const currYear   = now.getFullYear()
 
-  // Decide whether to group by month
-  // Group when: overview mode (any range), OR timeRange is 1y/5y
   const shouldGroup = isOverview || timeRange === '5y'
 
   const filtered = useMemo(() => {
     return transactions
       .filter(tx => {
-        // Overview shows both types; otherwise filter to activeTab
+        const d = new Date(tx.date)
+
+        // Day filter (month view bar click)
+        if (timeRange === 'month' && selectedDay != null) {
+          if (d.getDate() !== selectedDay || d.getMonth() !== selectedMonth || d.getFullYear() !== year) return false
+          if (!isOverview && tx.type !== activeTab) return false
+          return true
+        }
+
         if (!isOverview && tx.type !== activeTab) return false
 
-        const d = new Date(tx.date)
         if (timeRange === '5y') {
           if (selectedYear != null) return d.getFullYear() === selectedYear
           return d.getFullYear() >= currYear - 4
         }
-        // 'year' range
-        if (isOverview) return d.getFullYear() === year   // whole year in overview
+        if (isOverview) return d.getFullYear() === year
         return d.getMonth() === selectedMonth && d.getFullYear() === year
       })
       .sort(
@@ -77,7 +82,7 @@ export default function TransactionList({
           new Date(b.date) - new Date(a.date) ||
           new Date(b.createdAt) - new Date(a.createdAt),
       )
-  }, [transactions, activeTab, isOverview, selectedMonth, year, timeRange])
+  }, [transactions, activeTab, isOverview, selectedMonth, year, timeRange, selectedYear, selectedDay])
 
   const groups = useMemo(() => {
     if (!shouldGroup) return null

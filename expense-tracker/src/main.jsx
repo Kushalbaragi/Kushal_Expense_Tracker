@@ -5,6 +5,10 @@ import { AuthProvider } from './context/AuthContext'
 import './index.css'
 import App from './App.jsx'
 
+if (/android/i.test(navigator.userAgent)) {
+  document.documentElement.classList.add('platform-android')
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
