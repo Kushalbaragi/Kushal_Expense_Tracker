@@ -97,7 +97,7 @@ export default function TransactionList({
 
   return (
     <div className="px-4 pb-28">
-      <p className="text-white/25 text-xs font-medium uppercase tracking-wide mb-3 px-1">
+      <p className="text-white/25 text-xs font-medium uppercase tracking-wide mt-4 mb-3 px-1">
         Transactions
       </p>
 
