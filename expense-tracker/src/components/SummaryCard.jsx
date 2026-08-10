@@ -234,6 +234,7 @@ export default function SummaryCard({
           isIncome={isIncome}
           animKey={animKey}
           labelStep={labelStep}
+          useSqrtScale={timeRange === 'month'}
         />
       )}
 
