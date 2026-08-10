@@ -19,8 +19,8 @@ export default function BarChart({
   const maxVal  = Math.max(...values, 1)
   const svgH    = BAR_HEIGHT + 22
 
-  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(255,255,255,0.80)'
-  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(255,255,255,0.14)'
+  const activeColor = isIncome ? 'rgba(74,222,128,0.85)' : 'rgba(255,59,48,0.92)'
+  const dimColor    = isIncome ? 'rgba(74,222,128,0.22)' : 'rgba(255,59,48,0.5)'
 
   return (
     <svg
@@ -45,7 +45,7 @@ export default function BarChart({
 
       {values.map((v, i) => {
         const x          = i * GROUP_W + (GROUP_W - BAR_W) / 2
-        const h          = (v / maxVal) * BAR_HEIGHT
+        const h          = Math.sqrt(v / maxVal) * BAR_HEIGHT
         const isActive   = i === activeIndex
         const isDisabled = disabledAfterIndex != null && i > disabledAfterIndex
         const hasData    = h > 0
