@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "build": "cd expense-tracker && npm install && npm run build",
-    "start": "cd expense-tracker-api && npm install --omit=dev && node src/server.js",
-    "dev:frontend": "cd expense-tracker && npm install && npm run dev",
-    "dev:api": "cd expense-tracker-api && npm install && npm run dev"
+    "dev": "cd expense-tracker && npm install && npm run dev"
   }
 }

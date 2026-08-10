@@ -14,7 +14,7 @@ function Spinner() {
   )
 }
 
-function SuccessScreen({ email }) {
+function SuccessScreen() {
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -78,7 +78,6 @@ function SuccessScreen({ email }) {
 
 export default function SignupPage() {
   const { signup } = useAuth()
-  const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -108,7 +107,7 @@ export default function SignupPage() {
     }
   }
 
-  if (done) return <SuccessScreen email={form.email} />
+  if (done) return <SuccessScreen />
 
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6">

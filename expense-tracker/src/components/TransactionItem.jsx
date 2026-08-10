@@ -10,7 +10,7 @@ function DateBox({ dateStr }) {
   )
 }
 
-export default function TransactionItem({ tx, onDelete, onEdit, isIncome }) {
+export default function TransactionItem({ tx, onEdit, isIncome }) {
   return (
     <div
       className="flex items-center justify-between py-3 px-1 cursor-pointer active:opacity-70 transition-opacity duration-100"

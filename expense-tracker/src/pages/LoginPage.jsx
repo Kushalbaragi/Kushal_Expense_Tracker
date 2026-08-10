@@ -40,7 +40,7 @@ export default function LoginPage() {
       }
       await login({ email: form.email, password: form.password })
       navigate('/')
-    } catch (err) {
+    } catch {
       setError('Incorrect password. Please try again.')
     } finally {
       setLoading(false)

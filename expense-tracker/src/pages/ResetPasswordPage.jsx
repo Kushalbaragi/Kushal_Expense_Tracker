@@ -76,7 +76,6 @@ function SuccessScreen() {
 }
 
 export default function ResetPasswordPage() {
-  const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')

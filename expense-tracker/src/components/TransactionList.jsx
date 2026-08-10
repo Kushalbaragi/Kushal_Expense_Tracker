@@ -1,13 +1,8 @@
 import { useMemo } from 'react'
 import TransactionItem from './TransactionItem'
-import { formatCurrency, monthLabel } from '../utils/format'
+import { monthLabel } from '../utils/format'
 
-function MonthGroup({ group, isOverview, isIncome, onDelete, onEdit, idx: groupIdx }) {
-  const incTotal = group.txs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0)
-  const expTotal = group.txs.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0)
-  const net      = incTotal - expTotal
-  const typeTotal = isIncome ? incTotal : expTotal
-
+function MonthGroup({ group, isOverview, isIncome, onEdit, idx: groupIdx }) {
   return (
     <div style={{ animation: 'fadeSlideUp 0.25s ease both', animationDelay: `${groupIdx * 60}ms` }}>
       {/* Month header */}
@@ -27,7 +22,6 @@ function MonthGroup({ group, isOverview, isIncome, onDelete, onEdit, idx: groupI
             <TransactionItem
               tx={tx}
               isIncome={isOverview ? tx.type === 'income' : isIncome}
-              onDelete={onDelete}
               onEdit={onEdit}
             />
           </div>
@@ -46,13 +40,10 @@ export default function TransactionList({
   timeRange  = 'year',
   selectedYear,
   selectedDay,
-  onDelete,
   onEdit,
 }) {
   const isOverview = chartTab === 'overview'
   const isIncome   = activeTab === 'income'
-  const now        = new Date()
-  const currYear   = now.getFullYear()
 
   const shouldGroup = isOverview || timeRange === '5y'
 
@@ -72,7 +63,7 @@ export default function TransactionList({
 
         if (timeRange === '5y') {
           if (selectedYear != null) return d.getFullYear() === selectedYear
-          return d.getFullYear() >= currYear - 4
+          return true
         }
         if (isOverview) return d.getFullYear() === year
         return d.getMonth() === selectedMonth && d.getFullYear() === year
@@ -121,7 +112,6 @@ export default function TransactionList({
               group={group}
               isOverview={isOverview}
               isIncome={isIncome}
-              onDelete={onDelete}
               onEdit={onEdit}
               idx={idx}
             />
@@ -137,7 +127,6 @@ export default function TransactionList({
               <TransactionItem
                 tx={tx}
                 isIncome={isIncome}
-                onDelete={onDelete}
                 onEdit={onEdit}
               />
             </div>

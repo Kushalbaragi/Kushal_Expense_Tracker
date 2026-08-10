@@ -16,14 +16,14 @@ function fromRow(row) {
 const cacheKey = (userId) => `okana_txs_${userId}`
 
 function saveCache(userId, txs) {
-  try { localStorage.setItem(cacheKey(userId), JSON.stringify(txs)) } catch (_) {}
+  try { localStorage.setItem(cacheKey(userId), JSON.stringify(txs)) } catch { /* ignore */ }
 }
 
 function loadCache(userId) {
   try {
     const raw = localStorage.getItem(cacheKey(userId))
     return raw ? JSON.parse(raw) : null
-  } catch (_) { return null }
+  } catch { return null }
 }
 
 export function useTransactions() {

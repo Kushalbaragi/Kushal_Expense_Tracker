@@ -137,7 +137,6 @@ function Dashboard() {
             timeRange={timeRange}
             selectedYear={selectedYear}
             selectedDay={selectedDay}
-            onDelete={deleteTransaction}
             onEdit={openEdit}
           />
         </div>
