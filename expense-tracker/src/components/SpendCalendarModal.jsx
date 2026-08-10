@@ -60,13 +60,16 @@ export default function SpendCalendarModal({ open, onClose, transactions }) {
       />
 
       <div
-        className={`glass-modal fixed left-1/2 top-1/2 z-50 w-[88%] max-w-[340px] rounded-3xl px-6 py-6 transition-all duration-300 ease-out ${
+        className={`fixed left-1/2 top-1/2 z-50 w-[88%] max-w-[340px] rounded-3xl px-6 py-6 transition-all duration-300 ease-out ${
           open ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         style={{
           transform: `translate(-50%, -50%) scale(${open ? 1 : 0.95})`,
           maxHeight: '80vh',
           overflowY: 'auto',
+          background: '#1c1c1f',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.55)',
         }}
       >
         <div className="w-full max-w-[300px] mx-auto">

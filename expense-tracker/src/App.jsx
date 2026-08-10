@@ -121,7 +121,13 @@ function Dashboard() {
           onDayChange={handleDayChange}
         />
 
-        <div className="flex-1 overflow-y-auto">
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{
+            maskImage: 'linear-gradient(to bottom, transparent, black 10px)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 10px)',
+          }}
+        >
           <TransactionList
             transactions={transactions}
             activeTab={activeTab}

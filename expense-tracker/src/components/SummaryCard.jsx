@@ -7,7 +7,6 @@ import {
   getMonthTotal,
   getMonthlyTotals,
   getDailyTotals,
-  getLifetimeMonthly,
   getLifetimeYearly,
   currentMonthYear,
 } from '../utils/format'
@@ -57,7 +56,7 @@ function RangeSelector({ value, onChange, currentYear, currentMonth }) {
   const options = [
     { id: 'month', label: MONTH_NAMES[currentMonth] },
     { id: 'year',  label: String(currentYear) },
-    { id: '5y',    label: 'Lifetime' },
+    { id: '5y',    label: 'All Time' },
   ]
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
@@ -96,12 +95,10 @@ export default function SummaryCard({
   // ── Chart data ────────────────────────────────────────────────────────────
   const chartData = useMemo(() => {
     if (timeRange === 'month') return getDailyTotals(transactions, currMonth, currYear)
-    if (timeRange === '5y')   return chartTab === 'overview'
-      ? getLifetimeMonthly(transactions)
-      : getLifetimeYearly(transactions)
+    if (timeRange === '5y')    return getLifetimeYearly(transactions)
     const { income, expense } = getMonthlyTotals(transactions, year)
     return { income, expense, labels: MONTH_LABELS_SHORT }
-  }, [transactions, timeRange, year, currYear, currMonth, chartTab])
+  }, [transactions, timeRange, year, currYear, currMonth])
 
   // Derived year list from lifetime data (replaces fixed 5-year window)
   const yearsList = useMemo(() =>
@@ -155,8 +152,9 @@ export default function SummaryCard({
     if (timeRange === 'month') return MONTH_NAMES[currMonth]
     if (timeRange === 'year')  return MONTH_NAMES[selectedMonth]
     if (selectedYear != null)  return String(selectedYear)
-    return `${currYear - 4} – ${currYear}`
-  }, [timeRange, selectedMonth, year, currYear, currMonth, selectedYear])
+    if (yearsList.length)      return `${yearsList[0]} – ${currYear}`
+    return String(currYear)
+  }, [timeRange, selectedMonth, year, currYear, currMonth, selectedYear, yearsList])
 
   // Trim line chart for year range
   const lineChartData = useMemo(() => {

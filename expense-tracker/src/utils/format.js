@@ -178,35 +178,7 @@ export function getRolling12Months(transactions) {
   return { income, expense, labels }
 }
 
-// Monthly data from first transaction to now (overview Lifetime)
-export function getLifetimeMonthly(transactions) {
-  if (!transactions.length) return { income: [], expense: [], labels: [] }
-  const now = new Date()
-  const earliest = transactions.reduce((min, tx) => {
-    const d = new Date(tx.date); return d < min ? d : min
-  }, now)
-  const sy = earliest.getFullYear(), sm = earliest.getMonth()
-  const ey = now.getFullYear(),      em = now.getMonth()
-  const count = (ey - sy) * 12 + (em - sm) + 1
-  const slots = Array.from({ length: count }, (_, i) => {
-    const d = new Date(sy, sm + i, 1)
-    return { month: d.getMonth(), year: d.getFullYear() }
-  })
-  const income  = new Array(count).fill(0)
-  const expense = new Array(count).fill(0)
-  const labels  = slots.map(s => s.month === 0 ? `'${String(s.year).slice(2)}` : '')
-  transactions.forEach(tx => {
-    const d = new Date(tx.date)
-    const idx = slots.findIndex(s => s.month === d.getMonth() && s.year === d.getFullYear())
-    if (idx !== -1) {
-      if (tx.type === 'income') income[idx] += tx.amount
-      else expense[idx] += tx.amount
-    }
-  })
-  return { income, expense, labels }
-}
-
-// Yearly data from first transaction year to now (bar Lifetime)
+// Yearly data from first transaction year to now (All Time)
 export function getLifetimeYearly(transactions) {
   if (!transactions.length) return { income: [], expense: [], labels: [], years: [] }
   const currYear = new Date().getFullYear()
