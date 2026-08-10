@@ -11,6 +11,7 @@ export default function BarChart({
   isIncome,
   animKey,
   labelStep = 1,
+  useSqrtScale = false,
 }) {
   const n       = values.length
   const GROUP_W = CHART_W / n
@@ -45,7 +46,7 @@ export default function BarChart({
 
       {values.map((v, i) => {
         const x          = i * GROUP_W + (GROUP_W - BAR_W) / 2
-        const h          = Math.sqrt(v / maxVal) * BAR_HEIGHT
+        const h          = useSqrtScale ? Math.sqrt(v / maxVal) * BAR_HEIGHT : (v / maxVal) * BAR_HEIGHT
         const isActive   = i === activeIndex
         const isDisabled = disabledAfterIndex != null && i > disabledAfterIndex
         const hasData    = h > 0
