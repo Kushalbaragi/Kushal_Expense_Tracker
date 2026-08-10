@@ -24,6 +24,67 @@ export function today() {
   return new Date().toISOString().slice(0, 10)
 }
 
+export function dateBoxParts(dateStr) {
+  const d = new Date(dateStr)
+  return { day: d.getDate(), month: MONTHS_ABBR[d.getMonth()].toUpperCase() }
+}
+
+export function formatDateFull(dateStr) {
+  const d = new Date(dateStr)
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+}
+
+export const SPEND_SHADES = {
+  neutral: { bg: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' },
+  green:   { bg: 'rgba(34,197,94,0.18)',  color: '#4ade80' },
+  red: [
+    null,
+    { bg: 'rgba(239,68,68,0.16)', color: '#fca5a5' },
+    { bg: 'rgba(239,68,68,0.32)', color: '#f87171' },
+    { bg: 'rgba(239,68,68,0.55)', color: '#fecaca' },
+  ],
+}
+
+export function getDailyExpenseTotals(transactions) {
+  const map = {}
+  transactions.forEach(tx => {
+    if (tx.type !== 'expense') return
+    map[tx.date] = (map[tx.date] || 0) + tx.amount
+  })
+  return map
+}
+
+export function getIntensityThresholds(dailyTotals) {
+  const values = Object.values(dailyTotals).sort((a, b) => a - b)
+  if (!values.length) return { low: 0, high: 0 }
+  return {
+    low:  values[Math.floor((values.length - 1) * 0.33)],
+    high: values[Math.floor((values.length - 1) * 0.66)],
+  }
+}
+
+function spendIntensity(amount, thresholds) {
+  if (!amount) return 0
+  if (amount <= thresholds.low) return 1
+  if (amount <= thresholds.high) return 2
+  return 3
+}
+
+export function getEarliestDate(transactions) {
+  if (!transactions.length) return null
+  return transactions.reduce((min, tx) => (tx.date < min ? tx.date : min), transactions[0].date)
+}
+
+export function spendShadeFor(dateStr, { dailyTotals, thresholds, earliest, todayStr }) {
+  const isFuture = dateStr > todayStr
+  const noData = earliest && dateStr < earliest
+  if (isFuture || noData) return { ...SPEND_SHADES.neutral, isKnown: false }
+  const amt = dailyTotals[dateStr] || 0
+  const intensity = spendIntensity(amt, thresholds)
+  const shade = intensity === 0 ? SPEND_SHADES.green : SPEND_SHADES.red[intensity]
+  return { ...shade, isKnown: true }
+}
+
 export function formatDateLabel(dateStr) {
   const t = today()
   if (dateStr === t) return 'Today'

@@ -8,6 +8,17 @@ function HamburgerIcon() {
   )
 }
 
+function CalendarIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1.5" y="3" width="15" height="13" rx="2.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4"/>
+      <line x1="1.5" y1="7" x2="16.5" y2="7" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4"/>
+      <line x1="5" y1="1" x2="5" y2="4.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round"/>
+      <line x1="13" y1="1" x2="13" y2="4.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 const BTN_W = 78
 const PAD   = 3
 
@@ -43,7 +54,7 @@ function ChartTabToggle({ value, onChange }) {
   )
 }
 
-export default function Header({ onMenuOpen, chartTab, onChartTabChange }) {
+export default function Header({ onMenuOpen, chartTab, onChartTabChange, onCalendarOpen }) {
   return (
     <div className="flex items-center justify-between pt-6 pb-3 px-5">
       <button
@@ -56,8 +67,13 @@ export default function Header({ onMenuOpen, chartTab, onChartTabChange }) {
 
       <ChartTabToggle value={chartTab} onChange={onChartTabChange} />
 
-      {/* spacer mirrors hamburger width */}
-      <div className="w-9" />
+      <button
+        onClick={onCalendarOpen}
+        className="w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 hover:bg-white/8 active:scale-90"
+        aria-label="Spending calendar"
+      >
+        <CalendarIcon />
+      </button>
     </div>
   )
 }

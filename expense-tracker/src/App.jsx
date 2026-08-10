@@ -4,6 +4,7 @@ import Header from './components/Header'
 import SummaryCard from './components/SummaryCard'
 import TransactionList from './components/TransactionList'
 import AddModal from './components/AddModal'
+import SpendCalendarModal from './components/SpendCalendarModal'
 import Drawer from './components/Drawer'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -55,6 +56,7 @@ function Dashboard() {
   const [chartTab,     setChartTab]     = useState('expense')
   const [timeRange,    setTimeRange]    = useState('month')
   const [modalOpen,    setModalOpen]    = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [editTx,       setEditTx]       = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(currMonth)
   const [selectedYear,  setSelectedYear]  = useState(null)
@@ -102,6 +104,7 @@ function Dashboard() {
           onMenuOpen={() => setDrawerOpen(true)}
           chartTab={chartTab}
           onChartTabChange={handleChartTabChange}
+          onCalendarOpen={() => setCalendarOpen(true)}
         />
 
         <SummaryCard
@@ -153,6 +156,12 @@ function Dashboard() {
 
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onOpenPage={openPage} />
 
+        <SpendCalendarModal
+          open={calendarOpen}
+          onClose={() => setCalendarOpen(false)}
+          transactions={transactions}
+        />
+
         <AddModal
           open={modalOpen}
           onClose={handleClose}
@@ -166,7 +175,7 @@ function Dashboard() {
       {/* In-app page overlay (account / subscription / settings) */}
       {activePage && (
         <div
-          className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto transition-transform duration-[280ms] ease-out"
+          className="fixed inset-0 z-50 bg-bg overflow-y-auto transition-transform duration-[280ms] ease-out"
           style={{ transform: pageVisible ? 'translateX(0)' : 'translateX(100%)' }}
         >
           {activePage === 'account'      && <AccountPage      onBack={closePage} />}
