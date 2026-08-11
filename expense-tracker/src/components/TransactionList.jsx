@@ -6,7 +6,7 @@ function MonthGroup({ group, isOverview, isIncome, onEdit, idx: groupIdx }) {
   return (
     <div style={{ animation: 'fadeSlideUp 0.25s ease both', animationDelay: `${groupIdx * 60}ms` }}>
       {/* Month header */}
-      <div className="flex items-center justify-between px-1 mb-2 mt-4 first:mt-0">
+      <div className="flex items-center justify-between px-0 mb-2 mt-6 first:mt-0">
         <span className="text-white/35 text-xs font-medium uppercase tracking-wider">
           {monthLabel(group.month, group.year)}
         </span>
@@ -65,7 +65,7 @@ export default function TransactionList({
           if (selectedYear != null) return d.getFullYear() === selectedYear
           return true
         }
-        if (isOverview) return d.getFullYear() === year
+        if (timeRange === 'year') return d.getFullYear() === year
         return d.getMonth() === selectedMonth && d.getFullYear() === year
       })
       .sort(

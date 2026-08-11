@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   formatCurrencyFull,
   formatDateFull,
@@ -20,6 +20,10 @@ export default function SpendCalendarModal({ open, onClose, transactions }) {
   const now = new Date()
   const [view, setView] = useState(new Date(now.getFullYear(), now.getMonth(), 1))
   const [selectedDate, setSelectedDate] = useState(null)
+
+  useEffect(() => {
+    if (open) setSelectedDate(null)
+  }, [open])
 
   const year  = view.getFullYear()
   const month = view.getMonth()
@@ -77,17 +81,21 @@ export default function SpendCalendarModal({ open, onClose, transactions }) {
             <button
               type="button"
               onClick={prevMonth}
-              className="w-7 h-7 flex items-center justify-center rounded-full glass hover:glass-active transition-all text-white/50 hover:text-white text-base"
+              className="w-7 h-7 flex items-center justify-center rounded-full glass hover:glass-active transition-all text-white/50 hover:text-white"
             >
-              ‹
+              <svg width="5" height="9" viewBox="0 0 7 12" fill="none">
+                <path d="M6 1L1 6L6 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
             <span className="text-white/80 text-sm font-semibold">{MONTHS[month]} {year}</span>
             <button
               type="button"
               onClick={nextMonth}
-              className="w-7 h-7 flex items-center justify-center rounded-full glass hover:glass-active transition-all text-white/50 hover:text-white text-base"
+              className="w-7 h-7 flex items-center justify-center rounded-full glass hover:glass-active transition-all text-white/50 hover:text-white"
             >
-              ›
+              <svg width="5" height="9" viewBox="0 0 7 12" fill="none">
+                <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           </div>
 

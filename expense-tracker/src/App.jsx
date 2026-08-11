@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Header from './components/Header'
 import SummaryCard from './components/SummaryCard'
 import TransactionList from './components/TransactionList'
 import AddModal from './components/AddModal'
 import SpendCalendarModal from './components/SpendCalendarModal'
+import DailyInsightModal from './components/DailyInsightModal'
 import Drawer from './components/Drawer'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -15,7 +16,8 @@ import SubscriptionPage from './pages/SubscriptionPage'
 import SettingsPage from './pages/SettingsPage'
 import { useTransactions } from './hooks/useTransactions'
 import { useAuth } from './context/AuthContext'
-import { currentMonthYear } from './utils/format'
+import { currentMonthYear, today } from './utils/format'
+import { getDailyInsight } from './utils/insights'
 
 function GuestLanding() {
   const navigate = useNavigate()
@@ -64,7 +66,28 @@ function Dashboard() {
   const [drawerOpen,   setDrawerOpen]   = useState(false)
   const [activePage,   setActivePage]   = useState(null)  // 'account'|'subscription'|'settings'
   const [pageVisible,  setPageVisible]  = useState(false)
+  const [dailyInsight, setDailyInsight] = useState(null)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
+
+  useEffect(() => {
+    if (!user || !transactions.length) return
+    const shownKey      = `okana_insight_shown_${user.id}`
+    const celebratedKey = `okana_insight_celebrated_${user.id}`
+    const todayStr = today()
+    if (localStorage.getItem(shownKey) === todayStr) return
+
+    const celebrated = new Set(JSON.parse(localStorage.getItem(celebratedKey) || '[]'))
+    const insight = getDailyInsight(transactions, celebrated)
+
+    localStorage.setItem(shownKey, todayStr)
+    if (insight) {
+      if (insight.id) {
+        celebrated.add(insight.id)
+        localStorage.setItem(celebratedKey, JSON.stringify([...celebrated]))
+      }
+      setDailyInsight(insight)
+    }
+  }, [user, transactions])
 
   if (!user) return <GuestLanding />
 
@@ -165,6 +188,11 @@ function Dashboard() {
           open={calendarOpen}
           onClose={() => setCalendarOpen(false)}
           transactions={transactions}
+        />
+
+        <DailyInsightModal
+          insight={dailyInsight}
+          onClose={() => setDailyInsight(null)}
         />
 
         <AddModal
