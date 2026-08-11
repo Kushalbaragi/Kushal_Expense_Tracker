@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Header from './components/Header'
 import SummaryCard from './components/SummaryCard'
@@ -6,6 +6,7 @@ import TransactionList from './components/TransactionList'
 import AddModal from './components/AddModal'
 import SpendCalendarModal from './components/SpendCalendarModal'
 import DailyInsightModal from './components/DailyInsightModal'
+import MonthlyRecapModal from './components/MonthlyRecapModal'
 import Drawer from './components/Drawer'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -16,8 +17,9 @@ import SubscriptionPage from './pages/SubscriptionPage'
 import SettingsPage from './pages/SettingsPage'
 import { useTransactions } from './hooks/useTransactions'
 import { useAuth } from './context/AuthContext'
-import { currentMonthYear, today } from './utils/format'
+import { currentMonthYear, today, monthLabel } from './utils/format'
 import { getDailyInsight } from './utils/insights'
+import { getMonthlyRecapSlides, hasAnyRecapData, prevMonthYear, MONTH_NAMES } from './utils/monthlyRecap'
 
 function GuestLanding() {
   const navigate = useNavigate()
@@ -67,27 +69,67 @@ function Dashboard() {
   const [activePage,   setActivePage]   = useState(null)  // 'account'|'subscription'|'settings'
   const [pageVisible,  setPageVisible]  = useState(false)
   const [dailyInsight, setDailyInsight] = useState(null)
+  const [recapOpen,     setRecapOpen]     = useState(false)
+  const [recapSlides,   setRecapSlides]   = useState([])
+  const [recapMonthLabel, setRecapMonthLabel] = useState('')
+  const [recapMonthName,  setRecapMonthName]  = useState('')
+  const [recapAvailable, setRecapAvailable] = useState(false)
+  const [recapSeen,     setRecapSeen]     = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
 
   useEffect(() => {
     if (!user || !transactions.length) return
-    const shownKey      = `okana_insight_shown_${user.id}`
-    const celebratedKey = `okana_insight_celebrated_${user.id}`
     const todayStr = today()
-    if (localStorage.getItem(shownKey) === todayStr) return
+    const { month, year } = currentMonthYear()
+    const prev = prevMonthYear(month, year)
 
-    const celebrated = new Set(JSON.parse(localStorage.getItem(celebratedKey) || '[]'))
-    const insight = getDailyInsight(transactions, celebrated)
+    // Recap stays reopenable for the rest of the day it first became available
+    const availKey = `okana_recap_available_date_${user.id}`
+    const isAvailableToday = localStorage.getItem(availKey) === todayStr
 
-    localStorage.setItem(shownKey, todayStr)
-    if (insight) {
-      if (insight.id) {
-        celebrated.add(insight.id)
-        localStorage.setItem(celebratedKey, JSON.stringify([...celebrated]))
-      }
-      setDailyInsight(insight)
+    if (isAvailableToday && hasAnyRecapData(transactions, prev.month, prev.year)) {
+      setRecapSlides(getMonthlyRecapSlides(transactions, prev.month, prev.year))
+      setRecapMonthLabel(monthLabel(prev.month, prev.year))
+      setRecapMonthName(MONTH_NAMES[prev.month])
+      setRecapAvailable(true)
+      setRecapSeen(localStorage.getItem(`okana_recap_seen_${user.id}_${todayStr}`) === '1')
+    } else {
+      setRecapAvailable(false)
     }
+
+    const shownKey = `okana_insight_shown_${user.id}`
+    if (localStorage.getItem(shownKey) === todayStr) return
+    localStorage.setItem(shownKey, todayStr)
+
+    // First app-open after a month rollover — whatever day that lands on —
+    // shows the recap for the month that just ended instead of the daily insight.
+    const recapShownKey = `okana_recap_shown_${user.id}`
+    const recapMonthId  = `${prev.year}-${String(prev.month).padStart(2, '0')}`
+    const alreadyShown  = localStorage.getItem(recapShownKey) === recapMonthId
+
+    if (!alreadyShown && hasAnyRecapData(transactions, prev.month, prev.year)) {
+      localStorage.setItem(recapShownKey, recapMonthId)
+      localStorage.setItem(availKey, todayStr)
+      setRecapSlides(getMonthlyRecapSlides(transactions, prev.month, prev.year))
+      setRecapMonthLabel(monthLabel(prev.month, prev.year))
+      setRecapMonthName(MONTH_NAMES[prev.month])
+      setRecapAvailable(true)
+      setRecapSeen(false)
+      setRecapOpen(true)
+      return
+    }
+
+    const insight = getDailyInsight(transactions, todayStr)
+    if (insight) setDailyInsight(insight)
   }, [user, transactions])
+
+  const closeRecap = useCallback(() => {
+    setRecapOpen(false)
+    if (!user) return
+    const todayStr = today()
+    localStorage.setItem(`okana_recap_seen_${user.id}_${todayStr}`, '1')
+    setRecapSeen(true)
+  }, [user])
 
   if (!user) return <GuestLanding />
 
@@ -188,11 +230,24 @@ function Dashboard() {
           open={calendarOpen}
           onClose={() => setCalendarOpen(false)}
           transactions={transactions}
+          recap={recapAvailable ? {
+            available: true,
+            seen: recapSeen,
+            monthName: recapMonthName,
+            onOpen: () => { setCalendarOpen(false); setRecapOpen(true) },
+          } : null}
         />
 
         <DailyInsightModal
           insight={dailyInsight}
           onClose={() => setDailyInsight(null)}
+        />
+
+        <MonthlyRecapModal
+          open={recapOpen}
+          slides={recapSlides}
+          monthLabel={recapMonthLabel}
+          onClose={closeRecap}
         />
 
         <AddModal

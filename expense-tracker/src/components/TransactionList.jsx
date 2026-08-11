@@ -65,7 +65,6 @@ export default function TransactionList({
           if (selectedYear != null) return d.getFullYear() === selectedYear
           return true
         }
-        if (timeRange === 'year') return d.getFullYear() === year
         return d.getMonth() === selectedMonth && d.getFullYear() === year
       })
       .sort(

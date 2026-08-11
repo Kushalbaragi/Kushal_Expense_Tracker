@@ -16,7 +16,7 @@ function toStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function SpendCalendarModal({ open, onClose, transactions }) {
+export default function SpendCalendarModal({ open, onClose, transactions, recap }) {
   const now = new Date()
   const [view, setView] = useState(new Date(now.getFullYear(), now.getMonth(), 1))
   const [selectedDate, setSelectedDate] = useState(null)
@@ -77,6 +77,31 @@ export default function SpendCalendarModal({ open, onClose, transactions }) {
         }}
       >
         <div className="w-full max-w-[300px] mx-auto">
+          {recap?.available && (
+            <button
+              type="button"
+              onClick={recap.onOpen}
+              className="w-full flex items-center justify-between gap-2 mb-4 px-3 py-2.5 rounded-xl glass hover:glass-active transition-all active:scale-[0.98]"
+            >
+              <span className="flex items-center gap-2.5">
+                <span
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
+                  style={{
+                    background: recap.seen
+                      ? 'rgba(255,255,255,0.08)'
+                      : 'linear-gradient(135deg, #f59e0b, #ef4444, #ec4899, #a855f7)',
+                  }}
+                >
+                  📊
+                </span>
+                <span className="text-white/80 text-[13px] font-medium">{recap.monthName} Review</span>
+              </span>
+              <svg width="6" height="10" viewBox="0 0 7 12" fill="none" className="shrink-0">
+                <path d="M1 1L6 6L1 11" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"

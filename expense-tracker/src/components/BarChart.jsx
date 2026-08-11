@@ -21,7 +21,7 @@ export default function BarChart({
   const svgH    = BAR_HEIGHT + 22
 
   const activeColor = isIncome ? 'rgba(22,163,74,0.95)' : 'rgba(255,59,48,0.92)'
-  const dimColor    = isIncome ? 'rgba(22,163,74,0.5)' : 'rgba(255,59,48,0.5)'
+  const dimColor    = isIncome ? 'rgba(22,163,74,0.62)' : 'rgba(255,59,48,0.56)'
 
   return (
     <svg

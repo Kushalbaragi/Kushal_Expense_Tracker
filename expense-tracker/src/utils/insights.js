@@ -1,7 +1,4 @@
-import { formatCurrency, formatCurrencyFull, getMonthTotal, getEarliestDate, today } from './format'
-
-const TX_MILESTONES = [10, 50, 100, 250, 500, 1000]
-const MONTH_STREAK_MILESTONES = [3, 6, 12, 24]
+import { formatCurrency, formatCurrencyFull, getMonthTotal, getDailyTotals, getEarliestDate, today } from './format'
 
 function shiftDate(dateStr, days) {
   const d = new Date(dateStr)
@@ -80,68 +77,55 @@ export function getSavingsRateInsight(transactions, todayStr) {
   }
 }
 
-export function getMilestoneInsight(transactions, celebrated) {
-  const count = transactions.length
+export function getYesterdayInsight(transactions, todayStr) {
+  const yesterdayStr = shiftDate(todayStr, -1)
+  const earliest = getEarliestDate(transactions)
+  if (!earliest || earliest > yesterdayStr) return null
 
-  for (const m of TX_MILESTONES) {
-    const id = `count-${m}`
-    if (count >= m && !celebrated.has(id)) {
-      return {
-        id, key: 'milestone', tone: 'positive', emoji: '🎉',
-        headline: `${m} transactions logged`,
-        message: `You've logged ${m} transactions in Okana. Keep it up!`,
-      }
+  const yesterdayTotal = sumInRange(transactions, 'expense', yesterdayStr, yesterdayStr)
+
+  if (yesterdayTotal <= 0) {
+    return {
+      key: 'yesterday',
+      tone: 'positive',
+      emoji: '🎉',
+      headline: 'No spending yesterday!',
+      message: `You didn't spend anything yesterday — nice work keeping it in check!`,
     }
   }
 
-  const activeMonths = new Set(transactions.map(tx => tx.date.slice(0, 7)))
-  const now = new Date()
-  let streak = 0
-  for (let i = 0; ; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    if (activeMonths.has(key)) streak++
-    else break
+  const d = new Date(yesterdayStr)
+  const { expense } = getDailyTotals(transactions, d.getMonth(), d.getFullYear())
+  const spentDays = expense.filter(v => v > 0)
+  const maxSpend  = Math.max(...spentDays)
+  const minSpend  = Math.min(...spentDays)
+
+  if (spentDays.length > 1 && yesterdayTotal === maxSpend) {
+    return {
+      key: 'yesterday',
+      tone: 'nudge',
+      emoji: '📈',
+      headline: 'Highest spending day this month',
+      message: `You spent ${formatCurrency(yesterdayTotal)} yesterday — your highest single day this month.`,
+    }
   }
-  for (const m of MONTH_STREAK_MILESTONES) {
-    const id = `months-${m}`
-    if (streak >= m && !celebrated.has(id)) {
-      return {
-        id, key: 'milestone', tone: 'positive', emoji: '🗓️',
-        headline: `${m} months of tracking`,
-        message: `You've tracked your money for ${m} months in a row. That consistency adds up.`,
-      }
+  if (spentDays.length > 1 && yesterdayTotal === minSpend) {
+    return {
+      key: 'yesterday',
+      tone: 'positive',
+      emoji: '📉',
+      headline: 'Lowest spending day this month',
+      message: `You spent ${formatCurrency(yesterdayTotal)} yesterday — your lowest single day this month.`,
     }
   }
 
-  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const py = prevMonthDate.getFullYear(), pm = prevMonthDate.getMonth()
-  const inc = getMonthTotal(transactions, 'income', pm, py)
-  const exp = getMonthTotal(transactions, 'expense', pm, py)
-  const id = 'first-positive-month'
-  if (inc > 0 && inc - exp > 0 && !celebrated.has(id)) {
-    const earliest = getEarliestDate(transactions)
-    if (earliest) {
-      let anyEarlierPositive = false
-      const cursor = new Date(earliest)
-      cursor.setDate(1)
-      while (cursor < new Date(py, pm, 1)) {
-        const ci = getMonthTotal(transactions, 'income', cursor.getMonth(), cursor.getFullYear())
-        const ce = getMonthTotal(transactions, 'expense', cursor.getMonth(), cursor.getFullYear())
-        if (ci > 0 && ci - ce > 0) { anyEarlierPositive = true; break }
-        cursor.setMonth(cursor.getMonth() + 1)
-      }
-      if (!anyEarlierPositive) {
-        return {
-          id, key: 'milestone', tone: 'positive', emoji: '✨',
-          headline: 'First month in the green',
-          message: 'Last month you spent less than you earned — your first positive month tracked.',
-        }
-      }
-    }
+  return {
+    key: 'yesterday',
+    tone: 'neutral',
+    emoji: '🧾',
+    headline: `Yesterday's spend`,
+    message: `You spent ${formatCurrency(yesterdayTotal)} yesterday.`,
   }
-
-  return null
 }
 
 export function getAnomalyInsight(transactions, todayStr) {
@@ -183,14 +167,12 @@ export function getNeglectInsight(transactions, todayStr) {
   }
 }
 
-export function getDailyInsight(transactions, celebrated) {
-  const todayStr = today()
-
+export function getDailyInsight(transactions, todayStr = today()) {
   const neglect = getNeglectInsight(transactions, todayStr)
   if (neglect) return neglect
 
-  const milestone = getMilestoneInsight(transactions, celebrated)
-  if (milestone) return milestone
+  const yesterday = getYesterdayInsight(transactions, todayStr)
+  if (yesterday) return yesterday
 
   const anomaly = getAnomalyInsight(transactions, todayStr)
   if (anomaly) return anomaly
