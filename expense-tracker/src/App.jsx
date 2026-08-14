@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Header from './components/Header'
 import SummaryCard from './components/SummaryCard'
@@ -8,21 +8,59 @@ import SpendCalendarModal from './components/SpendCalendarModal'
 import DailyInsightModal from './components/DailyInsightModal'
 import MonthlyRecapModal from './components/MonthlyRecapModal'
 import Drawer from './components/Drawer'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
-import WelcomePage from './pages/WelcomePage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import AccountPage from './pages/AccountPage'
-import SubscriptionPage from './pages/SubscriptionPage'
-import SettingsPage from './pages/SettingsPage'
 import { useTransactions } from './hooks/useTransactions'
 import { useSubscription } from './hooks/useSubscription'
 import { useAuth } from './context/AuthContext'
 import { currentMonthYear, today, monthLabel } from './utils/format'
 import { getDailyInsight } from './utils/insights'
 import { getMonthlyRecapSlides, hasAnyRecapData, prevMonthYear, MONTH_NAMES } from './utils/monthlyRecap'
-import { getSubscriptionDisplayStatus, getTrialReminderInsight } from './utils/trial'
+import { getSubscriptionDisplayStatus, getPendingSubscriptionPopup, PRICE_PER_YEAR } from './utils/trial'
+
+const SINGLE_CTA_POPUPS = {
+  'trial-tomorrow': {
+    emoji: '⏳',
+    headline: 'Your Okana Plus trial ends tomorrow',
+    message: `Your saved payment method will be charged ₹${PRICE_PER_YEAR} for the annual plan after your trial ends.`,
+    cta: 'Continue with Okana Plus',
+  },
+  'success': {
+    emoji: '🎉',
+    headline: "You're now subscribed to Okana Plus",
+    message: 'Your annual subscription has started successfully.',
+    cta: 'Continue Tracking',
+  },
+}
+
+const DOUBLE_CTA_POPUPS = {
+  'trial-ended': {
+    emoji: '⏳',
+    headline: 'Your free trial ends today',
+    message: 'Okana Plus features will no longer be available after today. Subscribe to keep unlimited access.',
+  },
+  'payment-failed': {
+    emoji: '⚠️',
+    headline: 'Payment failed',
+    message: "We couldn't process your Okana Plus payment. Please update your payment method to continue accessing Plus features.",
+  },
+  'sub-ended': {
+    emoji: '👋',
+    headline: 'Your Okana Plus subscription has ended',
+    message: "You're now using Okana Free and no longer have access to Plus-only features.",
+  },
+}
+
+const LoginPage          = lazy(() => import('./pages/LoginPage'))
+const SignupPage         = lazy(() => import('./pages/SignupPage'))
+const WelcomePage        = lazy(() => import('./pages/WelcomePage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage  = lazy(() => import('./pages/ResetPasswordPage'))
+const AccountPage        = lazy(() => import('./pages/AccountPage'))
+const SubscriptionPage   = lazy(() => import('./pages/SubscriptionPage'))
+const SettingsPage       = lazy(() => import('./pages/SettingsPage'))
+
+function PageFallback() {
+  return <div className="min-h-screen bg-bg" />
+}
 
 function GuestLanding() {
   const navigate = useNavigate()
@@ -79,13 +117,15 @@ function Dashboard() {
   const [recapAvailable, setRecapAvailable] = useState(false)
   const [recapSeen,     setRecapSeen]     = useState(false)
   const [proRequired,   setProRequired]   = useState(false)
-  const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
+  const [pendingSubPopup, setPendingSubPopup] = useState(null)
+  const [activeSubPopup,  setActiveSubPopup]  = useState(null)
+  const { transactions, addTransaction, editTransaction, deleteTransaction, refresh: refreshTransactions } = useTransactions()
   const {
     subscription, loading: subLoading, starting: trialStarting, cancelling: trialCancelling,
-    error: trialError, paymentMethod, startTrial, cancelSubscription, updatePaymentMethod,
+    error: trialError, paymentMethod, startTrial, cancelSubscription,
   } = useSubscription(user)
 
-  const trialInfo = getSubscriptionDisplayStatus(subscription, today())
+  const trialInfo = useMemo(() => getSubscriptionDisplayStatus(subscription, today()), [subscription])
 
   useEffect(() => {
     if (!user || !transactions.length || subLoading) return
@@ -111,10 +151,6 @@ function Dashboard() {
     if (localStorage.getItem(shownKey) === todayStr) return
     localStorage.setItem(shownKey, todayStr)
 
-    // Trial-ending reminder takes priority over everything else that day.
-    const trialReminder = getTrialReminderInsight(trialInfo)
-    if (trialReminder) { setDailyInsight(trialReminder); return }
-
     // First app-open after a month rollover — whatever day that lands on —
     // shows the recap for the month that just ended instead of the daily insight.
     const recapShownKey = `okana_recap_shown_${user.id}`
@@ -137,6 +173,27 @@ function Dashboard() {
     if (insight) setDailyInsight(insight)
   }, [user, transactions, subLoading, subscription])
 
+  // Flag a subscription-lifecycle popup as due — independent of the
+  // daily-shown-key logic above, since these are once-per-event notices
+  // (see getPendingSubscriptionPopup), not once-per-day ones.
+  useEffect(() => {
+    if (!user || subLoading) return
+    const pending = getPendingSubscriptionPopup(subscription, trialInfo, user.id)
+    if (!pending || localStorage.getItem(pending.key) === '1') return
+    setPendingSubPopup(pending)
+  }, [user, subLoading, subscription, trialInfo.status, trialInfo.paymentFailed, trialInfo.daysLeft, trialInfo.cancelAtPeriodEnd, trialInfo.everBilled])
+
+  // Only actually show it once today's spending summary / recap (if any)
+  // has been seen and dismissed — spending data comes first, always.
+  useEffect(() => {
+    if (!pendingSubPopup) return
+    if (dailyInsight || recapOpen) return
+    if (localStorage.getItem(pendingSubPopup.key) === '1') { setPendingSubPopup(null); return }
+    localStorage.setItem(pendingSubPopup.key, '1')
+    setActiveSubPopup(pendingSubPopup.type)
+    setPendingSubPopup(null)
+  }, [pendingSubPopup, dailyInsight, recapOpen])
+
   const closeRecap = useCallback(() => {
     setRecapOpen(false)
     if (!user) return
@@ -145,45 +202,63 @@ function Dashboard() {
     setRecapSeen(true)
   }, [user])
 
-  if (!user) return <GuestLanding />
-
-  function handleChartTabChange(tab) {
+  const handleChartTabChange = useCallback(tab => {
     setChartTab(tab)
     if (tab !== 'overview') setActiveTab(tab)
-  }
+  }, [])
 
-  function handleTimeRangeChange(range) {
+  const handleTimeRangeChange = useCallback(range => {
     setTimeRange(range)
     setSelectedDay(null)
     if (range !== '5y') setSelectedYear(null)
-  }
+  }, [])
 
-  function handleDayChange(day) {
+  const handleDayChange = useCallback(day => {
     setSelectedDay(prev => prev === day ? null : day)
-  }
+  }, [])
 
-  function openPage(page) {
+  const openPage = useCallback(page => {
     setActivePage(page)
     requestAnimationFrame(() => requestAnimationFrame(() => setPageVisible(true)))
-  }
+  }, [])
 
-  function closePage() {
+  const closePage = useCallback(() => {
     setPageVisible(false)
     setTimeout(() => setActivePage(null), 280)
-  }
+  }, [])
 
-  function openEdit(tx) { setEditTx(tx); setModalOpen(true) }
-  function handleClose() { setModalOpen(false); setEditTx(null) }
+  const openEdit = useCallback(tx => { setEditTx(tx); setModalOpen(true) }, [])
+  const handleClose = useCallback(() => { setModalOpen(false); setEditTx(null) }, [])
+  const openDrawer = useCallback(() => setDrawerOpen(true), [])
+  const closeDrawer = useCallback(() => setDrawerOpen(false), [])
+  const openCalendar = useCallback(() => setCalendarOpen(true), [])
+  const closeCalendar = useCallback(() => setCalendarOpen(false), [])
+  const closeDailyInsight = useCallback(() => setDailyInsight(null), [])
+  const closeProRequired = useCallback(() => setProRequired(false), [])
+  const closeActiveSubPopup = useCallback(() => setActiveSubPopup(null), [])
+  const openAddModal = useCallback(() => {
+    if (trialInfo.status === 'expired') setProRequired(true)
+    else setModalOpen(true)
+  }, [trialInfo.status])
+  const subscribeFromProRequired = useCallback(() => { setProRequired(false); openPage('subscription') }, [openPage])
+  const subscribeFromPopup = useCallback(() => { setActiveSubPopup(null); openPage('subscription') }, [openPage])
+  const openRecapFromCalendar = useCallback(() => { setCalendarOpen(false); setRecapOpen(true) }, [])
+
+  const recapForCalendar = useMemo(() => (
+    recapAvailable ? { available: true, seen: recapSeen, monthName: recapMonthName, onOpen: openRecapFromCalendar } : null
+  ), [recapAvailable, recapSeen, recapMonthName, openRecapFromCalendar])
+
+  if (!user) return <GuestLanding />
 
   return (
     <div className="bg-bg font-sans h-screen flex flex-col overflow-hidden">
       <div className="mx-auto w-full max-w-[480px] h-full flex flex-col relative">
 
         <Header
-          onMenuOpen={() => setDrawerOpen(true)}
+          onMenuOpen={openDrawer}
           chartTab={chartTab}
           onChartTabChange={handleChartTabChange}
-          onCalendarOpen={() => setCalendarOpen(true)}
+          onCalendarOpen={openCalendar}
         />
 
         <SummaryCard
@@ -221,7 +296,7 @@ function Dashboard() {
         </div>
 
         <button
-          onClick={() => trialInfo.status === 'expired' ? setProRequired(true) : setModalOpen(true)}
+          onClick={openAddModal}
           className="fixed bottom-8 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center z-30 active:scale-90 transition-transform duration-150"
           style={{
             background: 'rgba(255,255,255,0.10)',
@@ -240,26 +315,21 @@ function Dashboard() {
 
         <Drawer
           open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
+          onClose={closeDrawer}
           onOpenPage={openPage}
           planLabel={trialInfo.status === 'subscribed' ? 'Pro' : 'Free'}
         />
 
         <SpendCalendarModal
           open={calendarOpen}
-          onClose={() => setCalendarOpen(false)}
+          onClose={closeCalendar}
           transactions={transactions}
-          recap={recapAvailable ? {
-            available: true,
-            seen: recapSeen,
-            monthName: recapMonthName,
-            onOpen: () => { setCalendarOpen(false); setRecapOpen(true) },
-          } : null}
+          recap={recapForCalendar}
         />
 
         <DailyInsightModal
           insight={dailyInsight}
-          onClose={() => setDailyInsight(null)}
+          onClose={closeDailyInsight}
         />
 
         <MonthlyRecapModal
@@ -282,7 +352,7 @@ function Dashboard() {
           <div
             className="fixed inset-0 z-50 flex items-center justify-center px-6"
             style={{ background: 'rgba(0,0,0,0.6)' }}
-            onClick={() => setProRequired(false)}
+            onClick={closeProRequired}
           >
             <div
               className="w-full max-w-sm rounded-2xl p-6 text-center"
@@ -294,18 +364,79 @@ function Dashboard() {
               <p className="text-white/45 text-sm leading-relaxed mb-6">
                 Your subscription has ended. You can still view everything — subscribe to Okana Plus to keep adding new transactions.
               </p>
-              <div className="flex flex-col gap-2.5">
+              <div className="flex gap-3">
                 <button
-                  onClick={() => { setProRequired(false); openPage('subscription') }}
-                  className="w-full py-[13px] rounded-2xl text-sm font-semibold glass-active text-white active:scale-95 transition-all"
-                >
-                  View Plans
-                </button>
-                <button
-                  onClick={() => setProRequired(false)}
-                  className="w-full py-[10px] text-white/40 text-sm"
+                  onClick={closeProRequired}
+                  className="flex-1 py-[11px] rounded-xl text-sm font-medium text-white/60"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
                 >
                   Not now
+                </button>
+                <button
+                  onClick={subscribeFromProRequired}
+                  className="flex-1 py-[11px] rounded-xl text-sm font-semibold active:scale-95 transition-all"
+                  style={{ background: 'rgba(74,222,128,0.25)', color: '#4ade80' }}
+                >
+                  Subscribe Now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubPopup && SINGLE_CTA_POPUPS[activeSubPopup] && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-6"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={closeActiveSubPopup}
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl p-6 text-center"
+              style={{ background: 'rgba(20,20,20,0.98)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-3xl mb-3">{SINGLE_CTA_POPUPS[activeSubPopup].emoji}</div>
+              <p className="text-white font-semibold text-base mb-2">{SINGLE_CTA_POPUPS[activeSubPopup].headline}</p>
+              <p className="text-white/45 text-sm leading-relaxed mb-6">{SINGLE_CTA_POPUPS[activeSubPopup].message}</p>
+              <button
+                onClick={closeActiveSubPopup}
+                className="w-full py-[13px] rounded-2xl text-sm font-semibold active:scale-95 transition-all"
+                style={{ background: 'rgba(74,222,128,0.25)', color: '#4ade80' }}
+              >
+                {SINGLE_CTA_POPUPS[activeSubPopup].cta}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeSubPopup && DOUBLE_CTA_POPUPS[activeSubPopup] && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-6"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={closeActiveSubPopup}
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl p-6 text-center"
+              style={{ background: 'rgba(20,20,20,0.98)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-3xl mb-3">{DOUBLE_CTA_POPUPS[activeSubPopup].emoji}</div>
+              <p className="text-white font-semibold text-base mb-2">{DOUBLE_CTA_POPUPS[activeSubPopup].headline}</p>
+              <p className="text-white/45 text-sm leading-relaxed mb-6">{DOUBLE_CTA_POPUPS[activeSubPopup].message}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={closeActiveSubPopup}
+                  className="flex-1 py-[11px] rounded-xl text-sm font-medium text-white/60"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
+                >
+                  Not now
+                </button>
+                <button
+                  onClick={subscribeFromPopup}
+                  className="flex-1 py-[11px] rounded-xl text-sm font-semibold active:scale-95 transition-all"
+                  style={{ background: 'rgba(74,222,128,0.25)', color: '#4ade80' }}
+                >
+                  Subscribe Now
                 </button>
               </div>
             </div>
@@ -319,21 +450,22 @@ function Dashboard() {
           className="fixed inset-0 z-50 bg-bg overflow-y-auto transition-transform duration-[280ms] ease-out"
           style={{ transform: pageVisible ? 'translateX(0)' : 'translateX(100%)' }}
         >
-          {activePage === 'account'      && <AccountPage      onBack={closePage} />}
-          {activePage === 'subscription' && (
-            <SubscriptionPage
-              onBack={closePage}
-              trialInfo={trialInfo}
-              onStartTrial={startTrial}
-              onCancel={cancelSubscription}
-              starting={trialStarting}
-              cancelling={trialCancelling}
-              error={trialError}
-              paymentMethod={paymentMethod}
-              onEditPaymentMethod={updatePaymentMethod}
-            />
-          )}
-          {activePage === 'settings'     && <SettingsPage     onBack={closePage} />}
+          <Suspense fallback={<PageFallback />}>
+            {activePage === 'account'      && <AccountPage      onBack={closePage} onDataErased={refreshTransactions} />}
+            {activePage === 'subscription' && (
+              <SubscriptionPage
+                onBack={closePage}
+                trialInfo={trialInfo}
+                onStartTrial={startTrial}
+                onCancel={cancelSubscription}
+                starting={trialStarting}
+                cancelling={trialCancelling}
+                error={trialError}
+                paymentMethod={paymentMethod}
+              />
+            )}
+            {activePage === 'settings'     && <SettingsPage     onBack={closePage} />}
+          </Suspense>
         </div>
       )}
     </div>
@@ -342,13 +474,15 @@ function Dashboard() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/welcome" element={<WelcomePage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-    </Routes>
+    <Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/welcome" element={<WelcomePage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      </Routes>
+    </Suspense>
   )
 }

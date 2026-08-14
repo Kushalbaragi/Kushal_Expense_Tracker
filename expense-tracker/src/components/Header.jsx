@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 function HamburgerIcon() {
   return (
     <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
@@ -54,7 +56,7 @@ function ChartTabToggle({ value, onChange }) {
   )
 }
 
-export default function Header({ onMenuOpen, chartTab, onChartTabChange, onCalendarOpen }) {
+function Header({ onMenuOpen, chartTab, onChartTabChange, onCalendarOpen }) {
   return (
     <div className="flex items-center justify-between pt-6 pb-3 px-5">
       <button
@@ -77,3 +79,5 @@ export default function Header({ onMenuOpen, chartTab, onChartTabChange, onCalen
     </div>
   )
 }
+
+export default memo(Header)

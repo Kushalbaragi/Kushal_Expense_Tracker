@@ -17,7 +17,7 @@ function Spinner() {
 export default function SignupPage() {
   const { signup } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -28,7 +28,8 @@ export default function SignupPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.name || !form.email || !form.password) { setError('Please fill in all fields'); return }
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) { setError('Please fill in all fields'); return }
+    if (form.password !== form.confirmPassword) { setError('Passwords do not match'); return }
     setLoading(true)
     try {
       await signup({ name: form.name, email: form.email, password: form.password })
@@ -84,6 +85,18 @@ export default function SignupPage() {
               name="password"
               placeholder="••••••••"
               value={form.password}
+              onChange={handleChange}
+              className="w-full glass rounded-xl px-4 py-3 text-white text-sm outline-none placeholder-border focus:glass-active transition-all duration-200"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white/35 text-xs font-medium mb-2 uppercase tracking-wider">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="••••••••"
+              value={form.confirmPassword}
               onChange={handleChange}
               className="w-full glass rounded-xl px-4 py-3 text-white text-sm outline-none placeholder-border focus:glass-active transition-all duration-200"
             />

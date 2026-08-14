@@ -27,10 +27,11 @@ async function authToken() {
   return token
 }
 
-async function callFunction(name, token) {
+async function callFunction(name, token, body) {
   const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${name}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: body ? JSON.stringify(body) : undefined,
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || `Failed to call ${name}`)
@@ -46,7 +47,7 @@ export function useSubscription(user) {
   const [paymentMethod, setPaymentMethod] = useState(null)
 
   const refresh = useCallback(async () => {
-    if (!user) { setSubscription(null); setLoading(false); return }
+    if (!user) { setSubscription(null); setLoading(false); return null }
     const { data } = await supabase
       .from('subscriptions')
       .select('*')
@@ -54,12 +55,14 @@ export function useSubscription(user) {
       .maybeSingle()
     setSubscription(data)
     setLoading(false)
+    return data
   }, [user])
 
   useEffect(() => { refresh() }, [refresh])
 
   useEffect(() => {
-    if (!user || !subscription || subscription.status === 'created') {
+    const TERMINAL = ['created', 'cancelled', 'expired', 'completed']
+    if (!user || !subscription || TERMINAL.includes(subscription.status)) {
       setPaymentMethod(null)
       return
     }
@@ -78,23 +81,57 @@ export function useSubscription(user) {
     try {
       await loadCheckoutScript()
       const token = await authToken()
-      const data = await callFunction('create-subscription', token)
+      const subData = await callFunction('create-subscription', token)
+      const initialStatus = subData.status
 
-      await new Promise((resolve, reject) => {
-        const rzp = new window.Razorpay({
+      let settled = false
+      let rzp
+
+      const checkoutPromise = new Promise((resolve, reject) => {
+        rzp = new window.Razorpay({
           key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-          subscription_id: data.subscription_id,
+          subscription_id: subData.subscription_id,
           name: 'Okana Plus',
-          description: '30-day free trial, then ₹499/year',
+          description: subData.hasTrial ? '30-day free trial, then ₹499/year' : '₹499/year, starting today',
           theme: { color: '#4ade80' },
-          handler: () => resolve(),
-          modal: { ondismiss: () => reject(new Error('Checkout closed before completing')) },
+          handler: () => { settled = true; resolve() },
+          modal: { ondismiss: () => { if (!settled) reject(new Error('Checkout closed before completing')) } },
         })
-        rzp.on('payment.failed', () => reject(new Error('Payment authorization failed')))
+        rzp.on('payment.failed', () => { settled = true; reject(new Error('Payment authorization failed')) })
         rzp.open()
       })
 
-      await refresh()
+      // Razorpay's client-side success callback can be lost during a bank
+      // OTP / 3-D Secure redirect even though the payment actually went
+      // through server-side — poll the real subscription status in the
+      // background so a lost callback doesn't leave the UI stuck on
+      // "Starting…" forever.
+      const pollPromise = (async () => {
+        for (let i = 0; i < 40; i++) {
+          if (settled) return
+          await new Promise(r => setTimeout(r, 3000))
+          if (settled) return
+          const data = await refresh()
+          if (data && data.status !== initialStatus && data.status !== 'created') {
+            settled = true
+            rzp?.close?.()
+            return
+          }
+        }
+        if (!settled) throw new Error('Still waiting on your bank/payment provider. Please check back in a few minutes, or try again.')
+      })()
+
+      await Promise.race([checkoutPromise, pollPromise])
+
+      // The webhook that syncs the real subscription status can lag a second or
+      // two behind Checkout's client-side success — poll briefly so the UI
+      // doesn't sit on a stale 'created' state (no payment method shown) right
+      // after a successful checkout.
+      let data = await refresh()
+      for (let i = 0; i < 4 && data?.status === 'created'; i++) {
+        await new Promise(r => setTimeout(r, 1500))
+        data = await refresh()
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -102,16 +139,18 @@ export function useSubscription(user) {
     }
   }, [user, refresh])
 
-  const cancelSubscription = useCallback(async () => {
-    if (!user) return
+  const cancelSubscription = useCallback(async ({ immediate = false } = {}) => {
+    if (!user) return false
     setCancelling(true)
     setError(null)
     try {
       const token = await authToken()
-      await callFunction('cancel-subscription', token)
+      await callFunction('cancel-subscription', token, { immediate })
       await refresh()
+      return true
     } catch (err) {
       setError(err.message)
+      return false
     } finally {
       setCancelling(false)
     }
@@ -119,6 +158,6 @@ export function useSubscription(user) {
 
   return {
     subscription, loading, starting, cancelling, error, paymentMethod,
-    startTrial, cancelSubscription, updatePaymentMethod: startTrial, refresh,
+    startTrial, cancelSubscription, refresh,
   }
 }

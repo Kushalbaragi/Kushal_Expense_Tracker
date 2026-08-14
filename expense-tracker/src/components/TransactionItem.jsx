@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { formatCurrencyFull, dateBoxParts } from '../utils/format'
 
 function DateBox({ dateStr }) {
@@ -10,7 +11,7 @@ function DateBox({ dateStr }) {
   )
 }
 
-export default function TransactionItem({ tx, onEdit, isIncome }) {
+function TransactionItem({ tx, onEdit, isIncome }) {
   return (
     <div
       className="flex items-center justify-between py-3 px-1 cursor-pointer active:opacity-70 transition-opacity duration-100"
@@ -33,3 +34,5 @@ export default function TransactionItem({ tx, onEdit, isIncome }) {
     </div>
   )
 }
+
+export default memo(TransactionItem)

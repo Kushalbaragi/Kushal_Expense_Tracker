@@ -31,6 +31,24 @@ export function useTransactions() {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(false)
 
+  async function refresh() {
+    if (!user) { setTransactions([]); return }
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
+    if (!error && data) {
+      const txs = data.map(fromRow)
+      setTransactions(txs)
+      saveCache(user.id, txs)
+    }
+    // On error (offline), keep showing cached data silently
+    setLoading(false)
+  }
+
   useEffect(() => {
     if (!user) { setTransactions([]); return }
 
@@ -38,22 +56,7 @@ export function useTransactions() {
     const cached = loadCache(user.id)
     if (cached) setTransactions(cached)
 
-    setLoading(true)
-    supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data) {
-          const txs = data.map(fromRow)
-          setTransactions(txs)
-          saveCache(user.id, txs)
-        }
-        // On error (offline), keep showing cached data silently
-        setLoading(false)
-      })
+    refresh()
   }, [user])
 
   async function addTransaction({ type, amount, date, description }) {
@@ -159,5 +162,5 @@ export function useTransactions() {
     }
   }
 
-  return { transactions, loading, addTransaction, editTransaction, deleteTransaction }
+  return { transactions, loading, addTransaction, editTransaction, deleteTransaction, refresh }
 }

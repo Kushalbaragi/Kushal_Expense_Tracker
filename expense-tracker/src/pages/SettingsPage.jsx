@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTransactions } from '../hooks/useTransactions'
+import { supabase } from '../lib/supabase'
 
 const APP_VERSION = '1.0.0'
 
@@ -65,16 +66,34 @@ export default function SettingsPage({ onBack }) {
   const handleBack = () => onBack ? onBack() : navigate(-1)
   const { transactions } = useTransactions()
 
-  const [modal, setModal] = useState(null) // 'privacy' | 'terms' | 'developer' | 'contact' | 'feedback'
+  const [modal, setModal] = useState(null) // 'privacy' | 'terms' | 'refund' | 'developer' | 'contact' | 'feedback'
   const [feedbackText, setFeedbackText] = useState('')
   const [feedbackSent, setFeedbackSent] = useState(false)
+  const [feedbackSending, setFeedbackSending] = useState(false)
+  const [feedbackError, setFeedbackError] = useState('')
 
-  function sendFeedback() {
+  async function sendFeedback() {
     if (!feedbackText.trim()) return
-    const mailto = `mailto:kushalbaragi@gmail.com?subject=Expense Tracker Feedback&body=${encodeURIComponent(feedbackText.trim())}`
-    window.open(mailto, '_blank')
-    setFeedbackSent(true)
-    setTimeout(() => { setFeedbackSent(false); setFeedbackText(''); setModal(null) }, 1500)
+    setFeedbackSending(true)
+    setFeedbackError('')
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data?.session?.access_token
+      if (!token) throw new Error('Not signed in')
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: feedbackText.trim() }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to send feedback')
+      setFeedbackSent(true)
+      setTimeout(() => { setFeedbackSent(false); setFeedbackText(''); setModal(null) }, 1500)
+    } catch (err) {
+      setFeedbackError(err.message)
+    } finally {
+      setFeedbackSending(false)
+    }
   }
 
   function exportData() {
@@ -112,6 +131,8 @@ export default function SettingsPage({ onBack }) {
             <Row label="Privacy Policy" onClick={() => setModal('privacy')} />
             <Divider />
             <Row label="Terms & Conditions" onClick={() => setModal('terms')} />
+            <Divider />
+            <Row label="Refund & Cancellation Policy" onClick={() => setModal('refund')} />
           </div>
 
           {/* Data */}
@@ -129,7 +150,9 @@ export default function SettingsPage({ onBack }) {
           <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
             <Row label="Contact" onClick={() => setModal('contact')} />
             <Divider />
-            <Row label="Send Feedback" onClick={() => setModal('feedback')} />
+            <Row label="Feedback" onClick={() => setModal('feedback')} />
+            <Divider />
+            <Row label="Rate Us" value="Coming soon" />
           </div>
 
           {/* About */}
@@ -149,9 +172,10 @@ export default function SettingsPage({ onBack }) {
         <p><strong className="text-white/70">Data storage:</strong> All your financial data is stored securely in Supabase with row-level security. Only you can access your own data.</p>
         <p><strong className="text-white/70">No selling:</strong> We do not sell, share, or monetise your personal data in any way.</p>
         <p><strong className="text-white/70">Authentication:</strong> Login is handled by Supabase Auth with industry-standard encryption.</p>
+        <p><strong className="text-white/70">Payments:</strong> Okana Plus subscription payments are processed by Razorpay, a PCI-DSS compliant payment gateway. Okana never sees or stores your card number, CVV, or full payment details — Razorpay handles that directly, and we only keep a masked reference (e.g. card network and last 4 digits) so we can show your saved payment method.</p>
         <p><strong className="text-white/70">Analytics:</strong> No third-party analytics or tracking libraries are used in this app.</p>
-        <p><strong className="text-white/70">Deletion:</strong> You can erase all your data or delete your account at any time from the Account page.</p>
-        <p className="text-white/25 text-xs">Last updated: April 2026</p>
+        <p><strong className="text-white/70">Deletion:</strong> You can erase all your data or delete your account at any time from the Account page. Deleting your account also cancels any active Okana Plus subscription.</p>
+        <p className="text-white/25 text-xs">Last updated: August 2026</p>
       </InfoModal>
 
       {/* Terms & Conditions modal */}
@@ -159,10 +183,21 @@ export default function SettingsPage({ onBack }) {
         <p>By using Okana you agree to the following terms.</p>
         <p><strong className="text-white/70">Personal use:</strong> This app is provided for personal, non-commercial use only.</p>
         <p><strong className="text-white/70">Accuracy:</strong> The app is a tracking tool and does not constitute financial advice. Always verify important financial decisions with a qualified professional.</p>
+        <p><strong className="text-white/70">Subscription & billing:</strong> Okana Plus costs ₹499/year after a 30-day free trial. A payment method is collected via Razorpay when your trial starts and is charged automatically when the trial ends, unless you cancel first. Subscriptions renew automatically every year until cancelled. See our Refund & Cancellation Policy for details.</p>
         <p><strong className="text-white/70">Availability:</strong> The app is provided "as is". We make no guarantees regarding uptime or data availability.</p>
         <p><strong className="text-white/70">Changes:</strong> We may update these terms at any time. Continued use of the app constitutes acceptance.</p>
         <p><strong className="text-white/70">Contact:</strong> For any queries, reach out to the developer directly.</p>
-        <p className="text-white/25 text-xs">Last updated: April 2026</p>
+        <p className="text-white/25 text-xs">Last updated: August 2026</p>
+      </InfoModal>
+
+      {/* Refund & Cancellation Policy modal */}
+      <InfoModal open={modal === 'refund'} title="Refund & Cancellation Policy" onClose={() => setModal(null)}>
+        <p><strong className="text-white/70">Free trial:</strong> Cancel anytime during your 30-day trial from the Subscription page — you won't be charged anything.</p>
+        <p><strong className="text-white/70">Cancelling a paid subscription:</strong> Cancel anytime from the Subscription page. Your plan won't renew, but you keep full access to Okana Plus until the end of the period you've already paid for.</p>
+        <p><strong className="text-white/70">Refunds:</strong> Okana Plus is a digital subscription that gives you immediate access to features. Payments already processed for the current billing period are non-refundable, including for early or partial cancellation.</p>
+        <p><strong className="text-white/70">Charged in error:</strong> If you believe you were charged incorrectly — a duplicate charge, or a charge after you cancelled — contact us within 7 days at kushalbaragi@gmail.com and we'll investigate and refund if warranted.</p>
+        <p><strong className="text-white/70">Failed payments:</strong> If a renewal payment fails, we'll prompt you to update your payment method. Access to adding new transactions is paused until it's resolved; your existing data always stays visible.</p>
+        <p className="text-white/25 text-xs">Last updated: August 2026</p>
       </InfoModal>
 
       {/* Contact modal */}
@@ -208,12 +243,13 @@ export default function SettingsPage({ onBack }) {
                 className="w-full glass rounded-xl px-4 py-3 text-white text-sm outline-none resize-none placeholder-border focus:glass-active transition-all mb-4"
                 style={{ color: 'rgba(255,255,255,0.85)' }}
               />
+              {feedbackError && <p className="text-red-400 text-xs mb-4">{feedbackError}</p>}
               <button
                 onClick={sendFeedback}
-                disabled={!feedbackText.trim()}
+                disabled={!feedbackText.trim() || feedbackSending}
                 className="w-full py-[14px] rounded-2xl text-sm font-semibold glass-active text-white active:scale-95 transition-all disabled:opacity-30"
               >
-                Send
+                {feedbackSending ? 'Sending…' : 'Send'}
               </button>
             </>
           )}

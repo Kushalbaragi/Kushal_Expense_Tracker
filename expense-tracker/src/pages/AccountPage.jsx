@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useSubscription } from '../hooks/useSubscription'
 import { supabase } from '../lib/supabase'
 
 function BackIcon() {
@@ -158,8 +159,9 @@ function ChangePasswordModal({ open, onClose }) {
   )
 }
 
-export default function AccountPage({ onBack }) {
+export default function AccountPage({ onBack, onDataErased }) {
   const { user, profile, logout } = useAuth()
+  const { subscription, cancelSubscription } = useSubscription(user)
   const navigate = useNavigate()
   const handleBack = () => onBack ? onBack() : navigate(-1)
   const fileRef = useRef(null)
@@ -181,6 +183,7 @@ export default function AccountPage({ onBack }) {
   }, [profile?.avatar])
 
   const [showEraseConfirm, setShowEraseConfirm] = useState(false)
+  const [eraseSuccess,     setEraseSuccess]     = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteSuccess,    setDeleteSuccess]    = useState(false)
   const [working, setWorking] = useState(false)
@@ -230,12 +233,21 @@ export default function AccountPage({ onBack }) {
   async function handleEraseData() {
     setWorking(true)
     await supabase.from('transactions').delete().eq('user_id', user.id)
+    onDataErased?.()
     setWorking(false)
     setShowEraseConfirm(false)
+    setEraseSuccess(true)
+    setTimeout(() => { setEraseSuccess(false); handleBack() }, 1500)
   }
 
   async function handleDeleteAccount() {
     setWorking(true)
+    const TERMINAL = ['cancelled', 'expired', 'completed']
+    if (subscription && !TERMINAL.includes(subscription.status)) {
+      // Stop any future Razorpay charges before the account (and our only
+      // record of the subscription) is gone for good.
+      await cancelSubscription({ immediate: true })
+    }
     await supabase.from('transactions').delete().eq('user_id', user.id)
     await supabase.rpc('delete_user')
     setWorking(false)
@@ -411,6 +423,26 @@ export default function AccountPage({ onBack }) {
       <ConfirmModal open={showDeleteConfirm} title="Delete Account"
         message="Your account and all data will be permanently deleted. This cannot be undone."
         confirmLabel={working ? 'Deleting…' : 'Delete Account'} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteConfirm(false)} />
+
+      {eraseSuccess && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          style={{ background: 'rgba(10,10,10,0.98)' }}
+        >
+          <div className="text-center" style={{ animation: 'fadeSlideUp 0.3s ease both' }}>
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)' }}
+            >
+              <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+                <path d="M6 18l8 8L30 10" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-white font-semibold text-base">Data erased</p>
+            <p className="text-white/40 text-sm mt-1">Redirecting…</p>
+          </div>
+        </div>
+      )}
 
       {deleteSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: 'rgba(10,10,10,0.98)' }}>

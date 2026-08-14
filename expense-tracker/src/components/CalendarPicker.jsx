@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -12,7 +12,7 @@ function toStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
-export default function CalendarPicker({ value, onChange, onClose }) {
+function CalendarPicker({ value, onChange, onClose }) {
   const selected = parseLocal(value)
   const [view, setView] = useState(new Date(selected.getFullYear(), selected.getMonth(), 1))
 
@@ -97,3 +97,5 @@ export default function CalendarPicker({ value, onChange, onClose }) {
     </div>
   )
 }
+
+export default memo(CalendarPicker)

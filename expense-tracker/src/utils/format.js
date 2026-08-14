@@ -1,5 +1,4 @@
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const MONTHS_SHORT = ['J','F','M','A','M','J','J','A','S','O','N','D']
 const MONTHS_ABBR  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 export function formatCurrency(amount) {
@@ -85,20 +84,6 @@ export function spendShadeFor(dateStr, { dailyTotals, thresholds, earliest, toda
   return { ...shade, isKnown: true }
 }
 
-export function formatDateLabel(dateStr) {
-  const t = today()
-  if (dateStr === t) return 'Today'
-  const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-  if (dateStr === y) return 'Yesterday'
-  const d = new Date(dateStr)
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}`
-}
-
-export function getMonthYear(dateStr) {
-  const d = new Date(dateStr)
-  return { month: d.getMonth(), year: d.getFullYear() }
-}
-
 export function currentMonthYear() {
   const now = new Date()
   return { month: now.getMonth(), year: now.getFullYear() }
@@ -106,10 +91,6 @@ export function currentMonthYear() {
 
 export function monthLabel(month, year) {
   return `${MONTHS[month]} ${year}`
-}
-
-export function monthShortLabel(index) {
-  return MONTHS_SHORT[index]
 }
 
 export function getMonthlyTotals(transactions, year) {
@@ -154,30 +135,6 @@ export function getDailyTotals(transactions, month, year) {
   return { income, expense, labels }
 }
 
-// Rolling last 12 months (oldest → newest)
-export function getRolling12Months(transactions) {
-  const now = new Date()
-  const slots = Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
-    return { month: d.getMonth(), year: d.getFullYear() }
-  })
-  const income  = new Array(12).fill(0)
-  const expense = new Array(12).fill(0)
-  const labels  = slots.map(s => {
-    const abbr = MONTHS_ABBR[s.month]
-    // Only mark the year on January (new-year boundary), keep others short
-    return s.month === 0 ? `${abbr}'${String(s.year).slice(2)}` : abbr
-  })
-  transactions.forEach(tx => {
-    const d = new Date(tx.date)
-    const idx = slots.findIndex(s => s.month === d.getMonth() && s.year === d.getFullYear())
-    if (idx === -1) return
-    if (tx.type === 'income') income[idx] += tx.amount
-    else expense[idx] += tx.amount
-  })
-  return { income, expense, labels }
-}
-
 // Yearly data from first transaction year to now (All Time)
 export function getLifetimeYearly(transactions) {
   if (!transactions.length) return { income: [], expense: [], labels: [], years: [] }
@@ -196,21 +153,6 @@ export function getLifetimeYearly(transactions) {
     }
   })
   return { income, expense, labels: years.map(String), years }
-}
-
-// Yearly totals for last `count` years
-export function getYearlyTotals(transactions, currentYear, count = 5) {
-  const years   = Array.from({ length: count }, (_, i) => currentYear - count + 1 + i)
-  const income  = new Array(count).fill(0)
-  const expense = new Array(count).fill(0)
-  const labels  = years.map(String)
-  transactions.forEach(tx => {
-    const idx = years.indexOf(new Date(tx.date).getFullYear())
-    if (idx === -1) return
-    if (tx.type === 'income') income[idx] += tx.amount
-    else expense[idx] += tx.amount
-  })
-  return { income, expense, labels }
 }
 
 export function getDelta(transactions, type, month, year) {

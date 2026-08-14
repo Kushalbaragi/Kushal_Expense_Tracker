@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import TransactionItem from './TransactionItem'
 import { monthLabel } from '../utils/format'
 
@@ -31,7 +31,7 @@ function MonthGroup({ group, isOverview, isIncome, onEdit, idx: groupIdx }) {
   )
 }
 
-export default function TransactionList({
+function TransactionList({
   transactions,
   activeTab,
   chartTab   = 'expense',
@@ -135,3 +135,5 @@ export default function TransactionList({
     </div>
   )
 }
+
+export default memo(TransactionList)

@@ -1,10 +1,12 @@
+import { memo } from 'react'
+
 const TONE_STYLES = {
   positive: { bg: 'rgba(74,222,128,0.12)', border: 'rgba(74,222,128,0.25)', button: 'rgba(74,222,128,0.16)', text: '#4ade80' },
   neutral:  { bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.10)', button: 'rgba(255,255,255,0.10)', text: 'rgba(255,255,255,0.8)' },
   nudge:    { bg: 'rgba(251,191,36,0.10)', border: 'rgba(251,191,36,0.22)', button: 'rgba(251,191,36,0.14)', text: '#fbbf24' },
 }
 
-export default function DailyInsightModal({ insight, onClose }) {
+function DailyInsightModal({ insight, onClose }) {
   const open = !!insight
   const tone = TONE_STYLES[insight?.tone] || TONE_STYLES.neutral
 
@@ -59,3 +61,5 @@ export default function DailyInsightModal({ insight, onClose }) {
     </>
   )
 }
+
+export default memo(DailyInsightModal)

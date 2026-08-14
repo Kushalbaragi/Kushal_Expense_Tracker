@@ -1,7 +1,9 @@
+import { memo } from 'react'
+
 const BAR_HEIGHT = 80
 const CHART_W    = 264  // constant viewBox width — keeps all ranges visually consistent
 
-export default function BarChart({
+function BarChart({
   values,
   labels,
   activeIndex,
@@ -94,3 +96,5 @@ export default function BarChart({
     </svg>
   )
 }
+
+export default memo(BarChart)

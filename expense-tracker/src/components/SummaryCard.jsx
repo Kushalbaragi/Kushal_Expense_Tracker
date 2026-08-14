@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import BarChart  from './BarChart'
 import LineChart from './LineChart'
 import {
@@ -77,7 +77,7 @@ function RangeSelector({ value, onChange, currentYear, currentMonth }) {
   )
 }
 
-export default function SummaryCard({
+function SummaryCard({
   transactions,
   chartTab,
   timeRange,
@@ -154,7 +154,7 @@ export default function SummaryCard({
     if (selectedYear != null)  return String(selectedYear)
     if (yearsList.length)      return `${yearsList[0]} – ${currYear}`
     return String(currYear)
-  }, [timeRange, selectedMonth, year, currYear, currMonth, selectedYear, yearsList])
+  }, [timeRange, selectedMonth, currYear, currMonth, selectedYear, yearsList])
 
   // Trim line chart for year range
   const lineChartData = useMemo(() => {
@@ -241,3 +241,5 @@ export default function SummaryCard({
     </div>
   )
 }
+
+export default memo(SummaryCard)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useId } from 'react'
+import { memo, useState, useEffect, useId } from 'react'
 
 const CHART_W = 300
 const CHART_H = 72
@@ -23,7 +23,7 @@ function areaPath(pts, bottom) {
   return `${line} L${pts[pts.length - 1].x.toFixed(1)},${bottom} L${pts[0].x.toFixed(1)},${bottom} Z`
 }
 
-export default function LineChart({ incomeData, expenseData, labels, animKey }) {
+function LineChart({ incomeData, expenseData, labels, animKey }) {
   const rawId = useId()
   const uid = rawId.replace(/[^a-zA-Z0-9]/g, 'x')
 
@@ -150,3 +150,5 @@ export default function LineChart({ incomeData, expenseData, labels, animKey }) 
     </svg>
   )
 }
+
+export default memo(LineChart)

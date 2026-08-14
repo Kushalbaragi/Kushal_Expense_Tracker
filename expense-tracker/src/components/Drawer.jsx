@@ -1,7 +1,8 @@
+import { memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function Drawer({ open, onClose, onOpenPage, planLabel }) {
+function Drawer({ open, onClose, onOpenPage, planLabel }) {
   const navigate = useNavigate()
   const { logout } = useAuth()
 
@@ -59,3 +60,5 @@ export default function Drawer({ open, onClose, onOpenPage, planLabel }) {
     </>
   )
 }
+
+export default memo(Drawer)

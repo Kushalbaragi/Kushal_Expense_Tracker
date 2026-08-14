@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
 import {
   formatCurrencyFull,
   formatDateFull,
@@ -16,7 +16,7 @@ function toStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function SpendCalendarModal({ open, onClose, transactions, recap }) {
+function SpendCalendarModal({ open, onClose, transactions, recap }) {
   const now = new Date()
   const [view, setView] = useState(new Date(now.getFullYear(), now.getMonth(), 1))
   const [selectedDate, setSelectedDate] = useState(null)
@@ -203,3 +203,5 @@ export default function SpendCalendarModal({ open, onClose, transactions, recap 
     </>
   )
 }
+
+export default memo(SpendCalendarModal)

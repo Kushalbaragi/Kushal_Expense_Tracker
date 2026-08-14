@@ -1,7 +1,8 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID')!
-const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET')!
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
+const FEEDBACK_TO = 'kushalbaragibusiness@gmail.com'
+const MAX_MESSAGE_LENGTH = 5000
 
 const PROD_ORIGIN = 'https://lightsteelblue-moose-697724.hostingersite.com'
 
@@ -47,7 +48,6 @@ Deno.serve(async req => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
@@ -57,41 +57,42 @@ Deno.serve(async req => {
     return json({ error: 'Unauthorized' }, 401)
   }
 
-  const adminClient = createClient(supabaseUrl, serviceRoleKey)
-
-  const { data: sub } = await adminClient
-    .from('subscriptions')
-    .select('razorpay_subscription_id, status')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  // No subscription yet, or checkout never actually completed — nothing to show.
-  if (!sub || sub.status === 'created') {
-    return json({ method: null })
+  let message = ''
+  try {
+    const body = await req.json()
+    message = String(body?.message || '').trim()
+  } catch {
+    // No/invalid JSON body — message stays empty and fails validation below.
+  }
+  if (!message) {
+    return json({ error: 'Message is required' }, 400)
+  }
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return json({ error: 'Message is too long' }, 400)
   }
 
-  const basicAuth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`)
+  const senderEmail = user.email || 'unknown@okana.app'
 
-  const subRes = await fetch(`https://api.razorpay.com/v1/subscriptions/${sub.razorpay_subscription_id}`, {
-    headers: { Authorization: `Basic ${basicAuth}` },
+  const emailRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: 'Okana Feedback <onboarding@resend.dev>',
+      to: [FEEDBACK_TO],
+      reply_to: senderEmail,
+      subject: 'Okana Feedback',
+      text: `From: ${senderEmail}\nUser ID: ${user.id}\n\n${message}`,
+    }),
   })
-  const subData = await subRes.json()
-  if (!subRes.ok || !subData.customer_id) {
-    return json({ method: null })
+
+  if (!emailRes.ok) {
+    const errText = await emailRes.text()
+    console.error('Resend error:', errText)
+    return json({ error: 'Failed to send feedback' }, 502)
   }
 
-  const tokensRes = await fetch(`https://api.razorpay.com/v1/customers/${subData.customer_id}/tokens`, {
-    headers: { Authorization: `Basic ${basicAuth}` },
-  })
-  const tokensData = await tokensRes.json()
-  const token = tokensData.items?.[0]
-  if (!tokensRes.ok || !token) {
-    return json({ method: null })
-  }
-
-  return json({
-    method: token.method || null,
-    card: token.card ? { network: token.card.network, last4: token.card.last4 } : null,
-    vpa: token.vpa?.address || null,
-  })
+  return json({ sent: true })
 })

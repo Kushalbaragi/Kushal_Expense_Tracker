@@ -50,20 +50,26 @@ const CARD_NETWORK_LABEL = {
 
 export default function SubscriptionPage({
   onBack, trialInfo, onStartTrial, onCancel, starting, cancelling, error,
-  paymentMethod, onEditPaymentMethod,
+  paymentMethod,
 }) {
   const navigate = useNavigate()
   const handleBack = () => onBack ? onBack() : navigate(-1)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [cancelSuccess, setCancelSuccess] = useState(false)
 
   const status = trialInfo?.status || 'not_started'
-  const pill = PLAN_PILL[status]
-  const canCancel = status === 'trial' || status === 'subscribed'
+  const isEnding = trialInfo?.cancelAtPeriodEnd && (status === 'trial' || status === 'subscribed')
+  const pill = isEnding ? { label: 'Ending', tone: 'grey' } : PLAN_PILL[status]
+  const canCancel = (status === 'trial' || status === 'subscribed') && !trialInfo?.cancelAtPeriodEnd
   const needsAction = status === 'not_started' || status === 'expired'
 
   async function handleConfirmCancel() {
-    await onCancel()
+    const ok = await onCancel()
     setConfirmOpen(false)
+    if (ok) {
+      setCancelSuccess(true)
+      setTimeout(() => setCancelSuccess(false), 4000)
+    }
   }
 
   return (
@@ -86,12 +92,18 @@ export default function SubscriptionPage({
             </div>
           )}
 
+          {cancelSuccess && (
+            <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)' }}>
+              <span className="text-[13px]" style={{ color: '#4ade80' }}>You've successfully unsubscribed</span>
+            </div>
+          )}
+
           {/* Current plan */}
           <div>
             <SectionLabel>Current Plan</SectionLabel>
             <Card>
               <div className="flex items-center justify-between px-4 py-[14px]">
-                <span className="text-white text-sm">Okana Plus</span>
+                <span className="text-white text-sm">{needsAction ? 'Okana' : 'Okana Plus'}</span>
                 <Pill tone={pill.tone}>{pill.label}</Pill>
               </div>
 
@@ -100,7 +112,9 @@ export default function SubscriptionPage({
                   <Divider />
                   <div className="px-4 py-[14px]">
                     <span className="text-white/40 text-xs">
-                      You'll be charged ₹{PRICE_PER_YEAR} on {formatChargeDate(trialInfo.chargeDate)}
+                      {trialInfo.cancelAtPeriodEnd
+                        ? `Plus access ends ${formatChargeDate(trialInfo.chargeDate)} — you won't be charged`
+                        : `You'll be charged ₹${PRICE_PER_YEAR} on ${formatChargeDate(trialInfo.chargeDate)}`}
                     </span>
                   </div>
                 </>
@@ -113,31 +127,7 @@ export default function SubscriptionPage({
                   </div>
                 </>
               )}
-              {trialInfo.paymentFailed && (
-                <>
-                  <Divider />
-                  <div className="px-4 py-[14px]">
-                    <span className="text-[12px]" style={{ color: 'rgba(248,113,113,0.85)' }}>Payment failed</span>
-                  </div>
-                </>
-              )}
             </Card>
-
-            {needsAction && (
-              <button
-                onClick={onStartTrial}
-                disabled={starting}
-                className="w-full mt-3 py-[13px] rounded-2xl text-sm font-semibold glass-active text-white active:scale-95 transition-all disabled:opacity-50"
-              >
-                {starting
-                  ? 'Starting…'
-                  : trialInfo.paymentFailed
-                    ? 'Update Payment Method'
-                    : status === 'not_started'
-                      ? 'Start 30-Day Free Trial'
-                      : `Subscribe — ₹${PRICE_PER_YEAR}/year`}
-              </button>
-            )}
           </div>
 
           {/* Payment method */}
@@ -161,9 +151,7 @@ export default function SubscriptionPage({
                       </span>
                     </div>
                     {trialInfo.paymentFailed && (
-                      <button onClick={onEditPaymentMethod} className="text-white/40 text-[12px] hover:text-white/70 transition-colors">
-                        Edit
-                      </button>
+                      <span className="text-[12px] font-medium" style={{ color: 'rgba(248,113,113,0.85)' }}>Payment failed</span>
                     )}
                   </div>
                 ) : (
@@ -173,6 +161,23 @@ export default function SubscriptionPage({
                 )}
               </Card>
             </div>
+          )}
+
+          {needsAction && (
+            <button
+              onClick={onStartTrial}
+              disabled={starting}
+              className="w-full py-[13px] rounded-2xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
+              style={{ background: 'rgba(74,222,128,0.25)', color: '#4ade80' }}
+            >
+              {starting
+                ? 'Starting…'
+                : trialInfo.paymentFailed
+                  ? 'Update Payment Method'
+                  : status === 'not_started'
+                    ? 'Start 30-Day Free Trial'
+                    : 'Subscribe Now'}
+            </button>
           )}
 
           {/* Cancel plan */}

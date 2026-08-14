@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { memo, useState, useEffect, useRef } from 'react'
 import { today } from '../utils/format'
 import CalendarPicker from './CalendarPicker'
 import { toTitleCase } from '../utils/format'
@@ -20,7 +20,7 @@ function CalIcon() {
   )
 }
 
-export default function AddModal({ open, onClose, onAdd, onEdit, onDelete, editData }) {
+function AddModal({ open, onClose, onAdd, onEdit, onDelete, editData }) {
   const isEdit = !!editData
   const [type, setType] = useState('expense')
   const [amount, setAmount] = useState('')
@@ -189,3 +189,5 @@ export default function AddModal({ open, onClose, onAdd, onEdit, onDelete, editD
     </>
   )
 }
+
+export default memo(AddModal)

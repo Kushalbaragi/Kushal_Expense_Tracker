@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 
 const SLIDE_MS = 6000
 
@@ -8,7 +8,7 @@ const TONE = {
   nudge:    { ring: '#fbbf24', glow: 'rgba(251,191,36,0.14)' },
 }
 
-export default function MonthlyRecapModal({ open, slides, monthLabel, onClose }) {
+function MonthlyRecapModal({ open, slides, monthLabel, onClose }) {
   const [index, setIndex] = useState(0)
   const timerRef = useRef(null)
 
@@ -106,3 +106,5 @@ export default function MonthlyRecapModal({ open, slides, monthLabel, onClose })
     </div>
   )
 }
+
+export default memo(MonthlyRecapModal)
