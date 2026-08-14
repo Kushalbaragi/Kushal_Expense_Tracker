@@ -54,14 +54,25 @@ Deno.serve(async req => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
+    const currentStart = subEntity.current_start ? new Date(subEntity.current_start * 1000).toISOString() : null
+    const currentEnd = subEntity.current_end ? new Date(subEntity.current_end * 1000).toISOString() : null
+
+    const update: Record<string, unknown> = {
+      status: subEntity.status,
+      current_start: currentStart,
+      current_end: currentEnd,
+      current_period_start: currentStart,
+      current_period_end: currentEnd,
+      updated_at: new Date().toISOString(),
+    }
+    // Only overwrite the authoritative expiry once Razorpay confirms a real
+    // billing cycle — leave a trial's expires_at (set at signup) untouched
+    // for events that don't carry a current_end (e.g. still-pending states).
+    if (currentEnd) update.expires_at = currentEnd
+
     await adminClient
       .from('subscriptions')
-      .update({
-        status: subEntity.status,
-        current_start: subEntity.current_start ? new Date(subEntity.current_start * 1000).toISOString() : null,
-        current_end: subEntity.current_end ? new Date(subEntity.current_end * 1000).toISOString() : null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(update)
       .eq('razorpay_subscription_id', subEntity.id)
   }
 

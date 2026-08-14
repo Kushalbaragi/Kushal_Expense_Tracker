@@ -61,11 +61,46 @@ Deno.serve(async req => {
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
+  let couponCode: string | undefined
+  try {
+    const body = await req.json()
+    couponCode = body?.couponCode
+  } catch {
+    // No body / not JSON — coupon is optional, just proceed without one.
+  }
+
+  let coupon: { id: string; razorpay_offer_id: string; times_redeemed: number } | null = null
+  if (couponCode) {
+    const normalized = couponCode.trim().toUpperCase()
+    const { data: found } = await adminClient
+      .from('coupons')
+      .select('id, razorpay_offer_id, active, expires_at, max_redemptions, times_redeemed')
+      .eq('code', normalized)
+      .maybeSingle()
+
+    if (!found || !found.active || (found.expires_at && new Date(found.expires_at) < new Date())) {
+      return json({ error: 'Invalid or expired coupon code' }, 400)
+    }
+    if (found.max_redemptions != null && found.times_redeemed >= found.max_redemptions) {
+      return json({ error: 'This coupon has already been fully redeemed' }, 400)
+    }
+    const { data: alreadyUsed } = await adminClient
+      .from('coupon_redemptions')
+      .select('id')
+      .eq('coupon_id', found.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (alreadyUsed) {
+      return json({ error: 'You already used this coupon' }, 400)
+    }
+    coupon = found
+  }
+
   // Reuse an existing subscription unless it's in a terminal state — a cancelled/expired
   // one can't be reactivated on Razorpay, so a resubscribe needs a genuinely new one.
   const { data: existing } = await adminClient
     .from('subscriptions')
-    .select('razorpay_subscription_id, status, trial_start, trial_used, current_start')
+    .select('razorpay_subscription_id, status, trial_start, trial_used, current_start, trial_end, expires_at')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -96,6 +131,9 @@ Deno.serve(async req => {
   if (grantTrial) {
     subscriptionBody.start_at = Math.floor(Date.now() / 1000) + TRIAL_DAYS * 86400
   }
+  if (coupon) {
+    subscriptionBody.offer_id = coupon.razorpay_offer_id
+  }
 
   const rpRes = await fetch('https://api.razorpay.com/v1/subscriptions', {
     method: 'POST',
@@ -111,6 +149,10 @@ Deno.serve(async req => {
     return json({ error: rpData.error?.description || 'Failed to create subscription' }, 502)
   }
 
+  const trialEnd = grantTrial
+    ? new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString().slice(0, 10)
+    : (existing?.trial_end ?? null)
+
   const row = {
     user_id: user.id,
     razorpay_subscription_id: rpData.id,
@@ -121,6 +163,14 @@ Deno.serve(async req => {
     cancel_at_period_end: false,
     current_start: null,
     current_end: null,
+    // Platform-agnostic fields — kept in sync for future Apple/Google rows too.
+    platform: 'razorpay',
+    product_id: PLAN_ID,
+    trial_end: trialEnd,
+    current_period_start: null,
+    current_period_end: null,
+    auto_renew: true,
+    expires_at: grantTrial ? new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString() : (existing?.expires_at ?? null),
   }
 
   const { error: writeError } = existing
@@ -129,6 +179,11 @@ Deno.serve(async req => {
 
   if (writeError) {
     return json({ error: 'Failed to save subscription' }, 500)
+  }
+
+  if (coupon) {
+    await adminClient.from('coupon_redemptions').insert({ coupon_id: coupon.id, user_id: user.id })
+    await adminClient.from('coupons').update({ times_redeemed: coupon.times_redeemed + 1 }).eq('id', coupon.id)
   }
 
   return json({ subscription_id: rpData.id, status: rpData.status, hasTrial: grantTrial })

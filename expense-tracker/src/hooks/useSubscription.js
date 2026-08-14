@@ -74,14 +74,14 @@ export function useSubscription(user) {
     return () => { cancelled = true }
   }, [user, subscription])
 
-  const startTrial = useCallback(async () => {
+  const startTrial = useCallback(async (couponCode) => {
     if (!user) return
     setStarting(true)
     setError(null)
     try {
       await loadCheckoutScript()
       const token = await authToken()
-      const subData = await callFunction('create-subscription', token)
+      const subData = await callFunction('create-subscription', token, couponCode ? { couponCode } : undefined)
       const initialStatus = subData.status
 
       let settled = false
@@ -92,7 +92,8 @@ export function useSubscription(user) {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID,
           subscription_id: subData.subscription_id,
           name: 'Okana Plus',
-          description: subData.hasTrial ? '30-day free trial, then ₹499/year' : '₹499/year, starting today',
+          description: (subData.hasTrial ? '30-day free trial, then ₹499/year' : '₹499/year, starting today')
+            + (couponCode ? ' (coupon applied at checkout)' : ''),
           theme: { color: '#4ade80' },
           handler: () => { settled = true; resolve() },
           modal: { ondismiss: () => { if (!settled) reject(new Error('Checkout closed before completing')) } },

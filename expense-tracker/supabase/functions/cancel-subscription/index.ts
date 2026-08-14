@@ -125,6 +125,7 @@ Deno.serve(async req => {
     .update({
       status: rpData.status || sub.status,
       cancel_at_period_end: cancelAtPeriodEnd,
+      auto_renew: !cancelAtPeriodEnd,
       updated_at: new Date().toISOString(),
     })
     .eq('razorpay_subscription_id', sub.razorpay_subscription_id)

@@ -56,6 +56,8 @@ export default function SubscriptionPage({
   const handleBack = () => onBack ? onBack() : navigate(-1)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [cancelSuccess, setCancelSuccess] = useState(false)
+  const [showCoupon, setShowCoupon] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
 
   const status = trialInfo?.status || 'not_started'
   const isEnding = trialInfo?.cancelAtPeriodEnd && (status === 'trial' || status === 'subscribed')
@@ -164,20 +166,42 @@ export default function SubscriptionPage({
           )}
 
           {needsAction && (
-            <button
-              onClick={onStartTrial}
-              disabled={starting}
-              className="w-full py-[13px] rounded-2xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
-              style={{ background: 'rgba(74,222,128,0.25)', color: '#4ade80' }}
-            >
-              {starting
-                ? 'Starting…'
-                : trialInfo.paymentFailed
-                  ? 'Update Payment Method'
-                  : status === 'not_started'
-                    ? 'Start 30-Day Free Trial'
-                    : 'Subscribe Now'}
-            </button>
+            <>
+              <button
+                onClick={() => onStartTrial(couponCode.trim() || undefined)}
+                disabled={starting}
+                className="w-full py-[13px] rounded-2xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
+                style={{ background: 'rgba(74,222,128,0.25)', color: '#4ade80' }}
+              >
+                {starting
+                  ? 'Starting…'
+                  : trialInfo.paymentFailed
+                    ? 'Update Payment Method'
+                    : status === 'not_started'
+                      ? 'Start 30-Day Free Trial'
+                      : 'Subscribe Now'}
+              </button>
+
+              {!trialInfo.paymentFailed && (
+                showCoupon ? (
+                  <input
+                    autoFocus
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value)}
+                    placeholder="Coupon code"
+                    className="w-full px-4 py-[10px] rounded-xl text-sm text-white outline-none placeholder-border text-center tracking-wide"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)' }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setShowCoupon(true)}
+                    className="w-full text-center text-white/30 text-xs hover:text-white/55 transition-colors"
+                  >
+                    Have a coupon code?
+                  </button>
+                )
+              )}
+            </>
           )}
 
           {/* Cancel plan */}

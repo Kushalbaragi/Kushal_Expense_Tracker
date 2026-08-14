@@ -136,7 +136,7 @@ export default function WelcomePage() {
         {error && <p className="text-red-400 text-xs mb-4">{error}</p>}
 
         <button
-          onClick={startTrial}
+          onClick={() => startTrial()}
           disabled={starting}
           className="w-full py-[14px] rounded-2xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
           style={{ background: 'rgba(74,222,128,0.25)', color: '#4ade80' }}
