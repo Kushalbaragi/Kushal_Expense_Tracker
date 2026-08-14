@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function Drawer({ open, onClose, onOpenPage }) {
+export default function Drawer({ open, onClose, onOpenPage, planLabel }) {
   const navigate = useNavigate()
   const { logout } = useAuth()
 
@@ -38,7 +38,19 @@ export default function Drawer({ open, onClose, onOpenPage }) {
       >
         <button onClick={() => openPage('account')} className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150">Account</button>
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
-        <button onClick={() => openPage('subscription')} className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150">Subscription</button>
+        <button onClick={() => openPage('subscription')} className="w-full flex items-center justify-between gap-2 text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150">
+          <span>Subscription</span>
+          {planLabel && (
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+              style={planLabel === 'Pro'
+                ? { background: 'rgba(74,222,128,0.14)', color: 'rgba(74,222,128,0.9)' }
+                : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
+            >
+              {planLabel}
+            </span>
+          )}
+        </button>
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />
         <button onClick={() => openPage('settings')} className="w-full text-left px-5 py-[14px] text-sm text-white hover:bg-white/5 active:bg-white/10 transition-colors duration-150">Settings</button>
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px' }} />

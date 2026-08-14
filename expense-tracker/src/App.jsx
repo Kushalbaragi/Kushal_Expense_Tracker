@@ -10,16 +10,19 @@ import MonthlyRecapModal from './components/MonthlyRecapModal'
 import Drawer from './components/Drawer'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import WelcomePage from './pages/WelcomePage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import AccountPage from './pages/AccountPage'
 import SubscriptionPage from './pages/SubscriptionPage'
 import SettingsPage from './pages/SettingsPage'
 import { useTransactions } from './hooks/useTransactions'
+import { useSubscription } from './hooks/useSubscription'
 import { useAuth } from './context/AuthContext'
 import { currentMonthYear, today, monthLabel } from './utils/format'
 import { getDailyInsight } from './utils/insights'
 import { getMonthlyRecapSlides, hasAnyRecapData, prevMonthYear, MONTH_NAMES } from './utils/monthlyRecap'
+import { getSubscriptionDisplayStatus, getTrialReminderInsight } from './utils/trial'
 
 function GuestLanding() {
   const navigate = useNavigate()
@@ -75,10 +78,17 @@ function Dashboard() {
   const [recapMonthName,  setRecapMonthName]  = useState('')
   const [recapAvailable, setRecapAvailable] = useState(false)
   const [recapSeen,     setRecapSeen]     = useState(false)
+  const [proRequired,   setProRequired]   = useState(false)
   const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions()
+  const {
+    subscription, loading: subLoading, starting: trialStarting, cancelling: trialCancelling,
+    error: trialError, paymentMethod, startTrial, cancelSubscription, updatePaymentMethod,
+  } = useSubscription(user)
+
+  const trialInfo = getSubscriptionDisplayStatus(subscription, today())
 
   useEffect(() => {
-    if (!user || !transactions.length) return
+    if (!user || !transactions.length || subLoading) return
     const todayStr = today()
     const { month, year } = currentMonthYear()
     const prev = prevMonthYear(month, year)
@@ -101,6 +111,10 @@ function Dashboard() {
     if (localStorage.getItem(shownKey) === todayStr) return
     localStorage.setItem(shownKey, todayStr)
 
+    // Trial-ending reminder takes priority over everything else that day.
+    const trialReminder = getTrialReminderInsight(trialInfo)
+    if (trialReminder) { setDailyInsight(trialReminder); return }
+
     // First app-open after a month rollover — whatever day that lands on —
     // shows the recap for the month that just ended instead of the daily insight.
     const recapShownKey = `okana_recap_shown_${user.id}`
@@ -121,7 +135,7 @@ function Dashboard() {
 
     const insight = getDailyInsight(transactions, todayStr)
     if (insight) setDailyInsight(insight)
-  }, [user, transactions])
+  }, [user, transactions, subLoading, subscription])
 
   const closeRecap = useCallback(() => {
     setRecapOpen(false)
@@ -207,7 +221,7 @@ function Dashboard() {
         </div>
 
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => trialInfo.status === 'expired' ? setProRequired(true) : setModalOpen(true)}
           className="fixed bottom-8 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center z-30 active:scale-90 transition-transform duration-150"
           style={{
             background: 'rgba(255,255,255,0.10)',
@@ -224,7 +238,12 @@ function Dashboard() {
           </svg>
         </button>
 
-        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onOpenPage={openPage} />
+        <Drawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          onOpenPage={openPage}
+          planLabel={trialInfo.status === 'subscribed' ? 'Pro' : 'Free'}
+        />
 
         <SpendCalendarModal
           open={calendarOpen}
@@ -258,6 +277,40 @@ function Dashboard() {
           onDelete={deleteTransaction}
           editData={editTx}
         />
+
+        {proRequired && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-6"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={() => setProRequired(false)}
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl p-6 text-center"
+              style={{ background: 'rgba(20,20,20,0.98)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-3xl mb-3">🔒</div>
+              <p className="text-white font-semibold text-base mb-2">Pro subscription required</p>
+              <p className="text-white/45 text-sm leading-relaxed mb-6">
+                Your subscription has ended. You can still view everything — subscribe to Okana Plus to keep adding new transactions.
+              </p>
+              <div className="flex flex-col gap-2.5">
+                <button
+                  onClick={() => { setProRequired(false); openPage('subscription') }}
+                  className="w-full py-[13px] rounded-2xl text-sm font-semibold glass-active text-white active:scale-95 transition-all"
+                >
+                  View Plans
+                </button>
+                <button
+                  onClick={() => setProRequired(false)}
+                  className="w-full py-[10px] text-white/40 text-sm"
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* In-app page overlay (account / subscription / settings) */}
@@ -267,7 +320,19 @@ function Dashboard() {
           style={{ transform: pageVisible ? 'translateX(0)' : 'translateX(100%)' }}
         >
           {activePage === 'account'      && <AccountPage      onBack={closePage} />}
-          {activePage === 'subscription' && <SubscriptionPage onBack={closePage} />}
+          {activePage === 'subscription' && (
+            <SubscriptionPage
+              onBack={closePage}
+              trialInfo={trialInfo}
+              onStartTrial={startTrial}
+              onCancel={cancelSubscription}
+              starting={trialStarting}
+              cancelling={trialCancelling}
+              error={trialError}
+              paymentMethod={paymentMethod}
+              onEditPaymentMethod={updatePaymentMethod}
+            />
+          )}
           {activePage === 'settings'     && <SettingsPage     onBack={closePage} />}
         </div>
       )}
@@ -281,6 +346,7 @@ export default function App() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/welcome" element={<WelcomePage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
     </Routes>

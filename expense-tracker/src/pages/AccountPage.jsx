@@ -182,6 +182,7 @@ export default function AccountPage({ onBack }) {
 
   const [showEraseConfirm, setShowEraseConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteSuccess,    setDeleteSuccess]    = useState(false)
   const [working, setWorking] = useState(false)
 
   const RING_DURATION = 2000
@@ -237,8 +238,15 @@ export default function AccountPage({ onBack }) {
     setWorking(true)
     await supabase.from('transactions').delete().eq('user_id', user.id)
     await supabase.rpc('delete_user')
-    await logout()
-    navigate('/login', { replace: true })
+    setWorking(false)
+    setShowDeleteConfirm(false)
+    setDeleteSuccess(true)
+    // Defer logout so this success message isn't torn down by the auth state
+    // change unmounting the page underneath it.
+    setTimeout(async () => {
+      await logout()
+      navigate('/login', { replace: true })
+    }, 1800)
   }
 
   const initials = (profile?.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -403,6 +411,23 @@ export default function AccountPage({ onBack }) {
       <ConfirmModal open={showDeleteConfirm} title="Delete Account"
         message="Your account and all data will be permanently deleted. This cannot be undone."
         confirmLabel={working ? 'Deleting…' : 'Delete Account'} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteConfirm(false)} />
+
+      {deleteSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: 'rgba(10,10,10,0.98)' }}>
+          <div className="text-center" style={{ animation: 'fadeSlideUp 0.3s ease both' }}>
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)' }}
+            >
+              <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+                <path d="M6 18l8 8L30 10" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-white font-semibold text-base">Account deleted</p>
+            <p className="text-white/40 text-sm mt-1">Redirecting…</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

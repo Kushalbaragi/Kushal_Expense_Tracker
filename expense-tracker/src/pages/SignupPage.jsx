@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -14,74 +14,12 @@ function Spinner() {
   )
 }
 
-function SuccessScreen() {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const t = setTimeout(() => navigate('/login'), 5000)
-    return () => clearTimeout(t)
-  }, [navigate])
-
-  return (
-    <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6 text-center">
-      {/* Animated green circle + tick */}
-      <div
-        className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
-        style={{
-          background: 'rgba(74,222,128,0.12)',
-          border: '1px solid rgba(74,222,128,0.3)',
-          animation: 'scaleIn 0.45s cubic-bezier(0.34,1.2,0.64,1) both',
-        }}
-      >
-        <svg
-          width="36" height="36" viewBox="0 0 36 36" fill="none"
-          style={{ animation: 'fadeSlideUp 0.35s 0.25s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
-        >
-          <path d="M6 18l8 8L30 10" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-
-      <h2
-        className="text-white text-xl font-semibold mb-2"
-        style={{ animation: 'fadeSlideUp 0.35s 0.35s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
-      >
-        Account created!
-      </h2>
-      <p
-        className="text-white/40 text-sm max-w-[260px] mb-8"
-        style={{ animation: 'fadeSlideUp 0.35s 0.45s cubic-bezier(0.16,1,0.3,1) both', opacity: 0 }}
-      >
-        You're all set. Redirecting to login…
-      </p>
-
-      {/* Progress bar */}
-      <div
-        className="w-40 h-[2px] rounded-full overflow-hidden"
-        style={{
-          background: 'rgba(255,255,255,0.08)',
-          animation: 'fadeSlideUp 0.35s 0.5s cubic-bezier(0.16,1,0.3,1) both',
-          opacity: 0,
-        }}
-      >
-        <div
-          style={{
-            height: '100%',
-            background: '#4ade80',
-            animation: 'progressFill 5s linear 0.55s both',
-            width: '0%',
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
 export default function SignupPage() {
   const { signup } = useAuth()
+  const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -94,7 +32,7 @@ export default function SignupPage() {
     setLoading(true)
     try {
       await signup({ name: form.name, email: form.email, password: form.password })
-      setDone(true)
+      navigate('/welcome', { replace: true })
     } catch (err) {
       const msg = err.message || ''
       if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
@@ -102,12 +40,9 @@ export default function SignupPage() {
       } else {
         setError(msg || 'Sign up failed. Please try again.')
       }
-    } finally {
       setLoading(false)
     }
   }
-
-  if (done) return <SuccessScreen />
 
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col items-center justify-center px-6">
