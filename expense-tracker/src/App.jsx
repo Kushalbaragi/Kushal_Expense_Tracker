@@ -54,6 +54,7 @@ const SignupPage         = lazy(() => import('./pages/SignupPage'))
 const WelcomePage        = lazy(() => import('./pages/WelcomePage'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const ResetPasswordPage  = lazy(() => import('./pages/ResetPasswordPage'))
+const PrivacyPolicyPage  = lazy(() => import('./pages/PrivacyPolicyPage'))
 const AccountPage        = lazy(() => import('./pages/AccountPage'))
 const SubscriptionPage   = lazy(() => import('./pages/SubscriptionPage'))
 const SettingsPage       = lazy(() => import('./pages/SettingsPage'))
@@ -482,6 +483,7 @@ export default function App() {
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
       </Routes>
     </Suspense>
   )
